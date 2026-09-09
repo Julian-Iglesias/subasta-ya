@@ -20,6 +20,9 @@ app.use((req, res, next) => {
     next()
 })
 
+
+
+
 app.post('/api/users', async (req, res) => {
     const { name, email, password } = req.body
 
@@ -67,6 +70,9 @@ app.post('/api/users', async (req, res) => {
     }
 })
 
+
+
+
 app.post('/api/auth/login', async (req, res) => {
     const { email, password } = req.body
 
@@ -97,16 +103,12 @@ app.post('/api/auth/login', async (req, res) => {
     }
 })
 
+
+
+
 app.get('/api/healt',(req,res)=>{
     res.status(200).json({
         status:'ok',
-        message: 'SubastaYa api funcionando'
-    })
-})
-
-app.get('/api/health', (req, res) => {
-    res.status(200).json({
-        status: 'ok',
         message: 'SubastaYa api funcionando'
     })
 })
