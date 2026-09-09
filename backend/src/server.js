@@ -1,8 +1,14 @@
 require('dotenv').config()
 const app = require('./app')
+const AppDataSource=require('./config/database')
 
-const port = process.env.PORT || 3000
+const PORT = process.env.PORT || 3000
 
-app.listen(port,()=> {
-    console.log(`Servidor corriendo en http://localhost:${port}`)
-})
+
+AppDataSource.initialize().then(()=>{
+    console.log('Base de datos conectada')
+    
+    app.listen(PORT,()=> {
+        console.log(`Servidor corriendo en http://localhost:${PORT}`)
+    })
+}).catch((error)=>{console.error('Error al conectar la BD: ',error)})

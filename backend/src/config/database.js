@@ -1,13 +1,21 @@
-const mysql = require('mysql2/promise')
+require('dotenv').config()
+require('reflect-metadata')
+const {DataSource} = require('typeorm')
+const User=require('../entities/User')
 
-const pool = mysql.createPool({
-	host: process.env.DB_HOST || 'localhost',
-	port: Number(process.env.DB_PORT || 3306),
-	user: process.env.DB_USER || 'root',
-	password: process.env.DB_PASSWORD || '',
-	database: process.env.DB_NAME || 'subastaya',
-	waitForConnections: true,
-	connectionLimit: 10
+const AppDataSource=new DataSource({
+	type:'mysql',
+	host: process.env.DB_HOST,
+	port: Number(process.env.DB_PORT),
+	username:process.env.DB_USER,
+	password: process.env.DB_PASSWORD,
+	database: process.env.DB_NAME,
+
+	synchronize: false,
+	logging:false,
+	entities: [User],
+	migrations: [__dirname+'/../migrations/*.js'],
 })
 
-module.exports = pool
+module.exports=AppDataSource
+
