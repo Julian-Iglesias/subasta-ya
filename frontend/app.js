@@ -89,5 +89,8 @@ form.addEventListener('submit', async (event) => {
 
 logoutButton.addEventListener('click', () => {
     sessionCard.hidden = true
+    sessionCard.style.display = 'none'
+    sessionName.textContent = ''
+    sessionEmail.textContent = ''
     showFeedback('Sesión cerrada.', 'success')
 })

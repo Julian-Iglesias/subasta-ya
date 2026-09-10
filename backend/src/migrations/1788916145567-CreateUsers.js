@@ -6,7 +6,6 @@ class CreateUsers1788916145567 {
         \`name\` varchar(100) NOT NULL,
         \`email\` varchar(150) NOT NULL,
         \`password\` varchar(255) NOT NULL,
-        \`createdAt\` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
         UNIQUE INDEX \`IDX_97672ac88f789774dd47f7c8be\` (\`email\`),
         PRIMARY KEY (\`id\`)
       ) ENGINE=InnoDB

@@ -236,6 +236,10 @@ input:focus {
     font-family: Arial, sans-serif;
 }
 
+.session-card[hidden] {
+    display: none;
+}
+
 .session-kicker {
     color: var(--green);
     font-size: 0.65rem;
