@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SubastaYa | Subastas</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body class="app-shell">
+    <div data-app-header></div>
+
+    <main class="page-content">
+        <div class="page-heading">
+            <div id="categorias">
+                <p class="eyebrow-dark">EXPLORAR</p>
+                <h1>Subastas</h1>
+                <p>Encontrá oportunidades, compará ofertas y elegí tu próxima puja.</p>
+            </div>
+            <button class="button" type="button">Crear subasta</button>
+        </div>
+
+        <section class="catalog-toolbar" aria-label="Filtros del catálogo">
+            <div>
+                <p class="card-label">Categorías</p>
+                <div class="filter-row" id="category-filters" role="group" aria-label="Filtrar por categoría"></div>
+            </div>
+            <div>
+                <p class="card-label">Estado</p>
+                <div class="filter-row" id="status-filters" role="group" aria-label="Filtrar por estado">
+                    <button class="filter-chip active" type="button" data-status="">Todas</button>
+                    <button class="filter-chip" type="button" data-status="ACTIVE">Activas</button>
+                    <button class="filter-chip" type="button" data-status="UPCOMING">Próximas</button>
+                    <button class="filter-chip" type="button" data-status="FINISHED">Finalizadas</button>
+                </div>
+            </div>
+            <div class="sort-row">
+                <label for="sort-select">Ordenar resultados</label>
+                <select class="sort-select" id="sort-select">
+                    <option value="time_asc">Terminan pronto</option>
+                    <option value="bid_desc">Mayor puja</option>
+                </select>
+            </div>
+        </section>
+
+        <div id="catalog-message" class="catalog-message" role="status" aria-live="polite">Cargando subastas...</div>
+        <section class="auction-grid" id="auction-grid" aria-label="Listado de subastas"></section>
+    </main>
+
+    <script src="./navigation.js"></script>
+    <script src="./catalogo.js"></script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SubastaYa | Detalle de subasta</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body class="app-shell">
+    <div data-app-header></div>
+    <main class="page-content">
+        <div class="page-heading">
+            <div>
+                <p class="eyebrow-dark">TECNOLOGÍA · SUBASTA ACTIVA</p>
+                <h1>Notebook para crear sin límites</h1>
+                <p>Una publicación de ejemplo para visualizar la sala de subasta y el historial de ofertas.</p>
+            </div>
+            <a class="button-secondary" href="catalogo.html">Volver al catálogo</a>
+        </div>
+
+        <div class="content-grid">
+            <section class="panel">
+                <div class="auction-hero">Imagen del producto</div>
+                <h2>Descripción</h2>
+                <p class="muted-copy">Notebook de alto rendimiento, ideal para diseño, desarrollo y trabajo diario. Esta descripción es de ejemplo y luego podrá venir desde la API.</p>
+                <h2>Historial de pujas</h2>
+                <ul class="bid-history">
+                    <li><span><strong>Usuario anónimo</strong><small>Hoy, 18:42</small></span><span class="bid-amount">$45.000</span></li>
+                    <li><span><strong>Comprador 2</strong><small>Hoy, 18:35</small></span><span class="bid-amount">$42.500</span></li>
+                    <li><span><strong>Comprador 1</strong><small>Hoy, 18:18</small></span><span class="bid-amount">$40.000</span></li>
+                </ul>
+            </section>
+
+            <aside class="detail-sidebar">
+                <section class="panel">
+                    <p class="price-label">Oferta actual</p>
+                    <div class="current-price">$45.000</div>
+                    <p class="muted-copy">Incremento mínimo: $2.500</p>
+                    <div class="countdown" aria-label="Tiempo restante">
+                        <div class="time-unit"><strong>02</strong><span>Horas</span></div>
+                        <div class="time-unit"><strong>18</strong><span>Min</span></div>
+                        <div class="time-unit"><strong>34</strong><span>Seg</span></div>
+                    </div>
+                    <form>
+                        <label for="bid-amount">Tu oferta</label>
+                        <input id="bid-amount" type="number" placeholder="47.500">
+                        <button class="button" type="button">Pujar</button>
+                    </form>
+                </section>
+                <section class="panel">
+                    <p class="card-label">Vendedor</p>
+                    <strong>Tienda SubastaYa</strong>
+                    <p class="muted-copy">Publicación verificada · 12 ventas</p>
+                </section>
+            </aside>
+        </div>
+    </main>
+    <script src="./navigation.js"></script>
+</body>
+</html>

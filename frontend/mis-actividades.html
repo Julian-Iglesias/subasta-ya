@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SubastaYa | Mis actividades</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body class="app-shell">
+    <div data-app-header></div>
+    <main class="page-content">
+        <div class="page-heading">
+            <div>
+                <p class="eyebrow-dark">MI CUENTA</p>
+                <h1>Mis actividades</h1>
+                <p>Un resumen de tus participaciones y publicaciones.</p>
+            </div>
+        </div>
+
+        <div class="tabs-panel" role="tablist">
+            <button class="active" type="button" data-activity-tab="bids">Mis pujas / compras</button>
+            <button type="button" data-activity-tab="publications">Mis publicaciones</button>
+        </div>
+
+        <section class="panel activity-list" id="bids-panel">
+            <div class="activity-row"><span><strong class="activity-title">Notebook para crear sin límites</strong><small>Última puja: $45.000 · Finaliza en 2 h</small></span><span class="status">Liderando</span></div>
+            <div class="activity-row"><span><strong class="activity-title">Cámara analógica vintage</strong><small>Compra adjudicada · $18.500</small></span><span class="status">Ganada</span></div>
+            <div class="activity-row"><span><strong class="activity-title">Vinilo edición limitada</strong><small>Tu última oferta: $12.000</small></span><span class="status">Superado</span></div>
+        </section>
+
+        <section class="panel activity-list" id="publications-panel">
+            <div class="activity-row"><span><strong class="activity-title">Notebook para crear sin límites</strong><small>2 pujas · Oferta actual $45.000</small></span><span class="status">Activa</span></div>
+            <div class="activity-row"><span><strong class="activity-title">Bicicleta urbana</strong><small>Finalizó sin ofertas</small></span><span class="status">Desierta</span></div>
+            <div class="activity-row"><span><strong class="activity-title">Consola retro</strong><small>Adjudicada por $32.000</small></span><span class="status">Finalizada</span></div>
+        </section>
+    </main>
+    <script src="./navigation.js"></script>
+</body>
+</html>

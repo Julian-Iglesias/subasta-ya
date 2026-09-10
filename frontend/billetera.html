@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SubastaYa | Mi billetera</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body class="app-shell">
+    <div data-app-header></div>
+    <main class="page-content">
+        <div class="page-heading">
+            <div>
+                <p class="eyebrow-dark">FINANZAS</p>
+                <h1>Mi billetera</h1>
+                <p>Consultá tus fondos y movimientos de ejemplo para entender cómo se verá este módulo.</p>
+            </div>
+            <button class="button" type="button">Cargar saldo</button>
+        </div>
+
+        <div class="stats-grid">
+            <article class="stat-card"><p class="card-label">Saldo total</p><strong>$150.000</strong></article>
+            <article class="stat-card"><p class="card-label">Saldo retenido</p><strong>$45.000</strong></article>
+            <article class="stat-card available"><p class="card-label">Saldo disponible</p><strong>$105.000</strong></article>
+        </div>
+
+        <section class="panel">
+            <h2>Movimientos recientes</h2>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead><tr><th>Fecha</th><th>Concepto</th><th>Estado</th><th>Monto</th></tr></thead>
+                    <tbody>
+                        <tr><td>Hoy, 18:18</td><td>Retención por puja</td><td>Activo</td><td class="negative">-$45.000</td></tr>
+                        <tr><td>Ayer, 10:04</td><td>Carga de saldo</td><td>Acreditado</td><td class="positive">+$150.000</td></tr>
+                        <tr><td>12/09/2026</td><td>Liberación de retención</td><td>Completado</td><td class="positive">+$25.000</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+    <script src="./navigation.js"></script>
+</body>
+</html>
