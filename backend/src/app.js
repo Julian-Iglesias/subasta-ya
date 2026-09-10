@@ -1,7 +1,9 @@
 const express = require('express')
 const path = require('path')
 const bcrypt = require('bcryptjs')
-const pool = require('./config/database')
+const AppDataSource = require('./config/database')
+const User = require('./entities/User')
+const Wallet = require('./entities/Wallet')
 
 const app = express()
 
@@ -30,43 +32,36 @@ app.post('/api/users', async (req, res) => {
         return res.status(400).json({ message: 'name, email y password son obligatorios' })
     }
 
-    let connection
-
     try {
-        connection = await pool.getConnection()
-        await connection.beginTransaction()
         const passwordHash = await bcrypt.hash(password, 10)
-        const [result] = await connection.execute(
-            'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
-            [name, email, passwordHash]
-        )
+        const user = await AppDataSource.transaction(async (transactionalEntityManager) => {
+            const userRepository = transactionalEntityManager.getRepository(User)
+            const walletRepository = transactionalEntityManager.getRepository(Wallet)
 
-        await connection.execute(
-            'INSERT INTO wallets (user_id) VALUES (?)',
-            [result.insertId]
-        )
+            const newUser = userRepository.create({
+                name,
+                email,
+                password: passwordHash
+            })
+            const savedUser = await userRepository.save(newUser)
 
-        await connection.commit()
+            const wallet = walletRepository.create({ user: savedUser })
+            await walletRepository.save(wallet)
+
+            return savedUser
+        })
 
         return res.status(201).json({
-            id: result.insertId,
-            name,
-            email
+            id: user.id,
+            name: user.name,
+            email: user.email
         })
     } catch (error) {
-        if (connection) {
-            await connection.rollback()
-        }
-
         if (error.code === 'ER_DUP_ENTRY') {
             return res.status(409).json({ message: 'El email ya está registrado' })
         }
 
         return res.status(500).json({ message: 'No se pudo crear el usuario' })
-    } finally {
-        if (connection) {
-            connection.release()
-        }
     }
 })
 
@@ -81,21 +76,19 @@ app.post('/api/auth/login', async (req, res) => {
     }
 
     try {
-        const [users] = await pool.execute(
-            'SELECT id, name, email, password FROM users WHERE email = ?',
-            [email]
-        )
+        const userRepository = AppDataSource.getRepository(User)
+        const user = await userRepository.findOneBy({ email })
 
-        if (users.length === 0 || !(await bcrypt.compare(password, users[0].password))) {
+        if (!user || !(await bcrypt.compare(password, user.password))) {
             return res.status(401).json({ message: 'Email o password incorrectos' })
         }
 
         return res.status(200).json({
             message: 'Login correcto',
             user: {
-                id: users[0].id,
-                name: users[0].name,
-                email: users[0].email
+                id: user.id,
+                name: user.name,
+                email: user.email
             }
         })
     } catch (error) {
