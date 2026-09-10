@@ -74,11 +74,9 @@ form.addEventListener('submit', async (event) => {
             setView('login')
             showFeedback('Cuenta creada. Ahora iniciá sesión.', 'success')
         } else {
-            sessionName.textContent = result.user.name
-            sessionEmail.textContent = result.user.email
-            sessionCard.hidden = false
-            showFeedback('Login correcto.', 'success')
-            form.reset()
+            localStorage.setItem('subastaya_user', JSON.stringify(result.user))
+            window.location.href = 'catalogo.html'
+            return
         }
     } catch (error) {
         showFeedback(error.message || 'No se pudo conectar con el backend.', 'error')
