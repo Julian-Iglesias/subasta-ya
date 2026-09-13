@@ -3,12 +3,14 @@ const path = require('path')
 const bcrypt = require('bcryptjs')
 const AppDataSource = require('./config/database')
 const User = require('./entities/User')
-const Wallet = require('./entities/Wallet')
+const usersRoutes=require('./routes/users.routes')
 
 const app = express()
 
 app.use(express.json())
 app.use(express.static(path.join(__dirname, '../../frontend')))
+
+app.use('/api/users',usersRoutes)
 
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*')
@@ -22,48 +24,6 @@ app.use((req, res, next) => {
     next()
 })
 
-
-
-
-app.post('/api/users', async (req, res) => {
-    const { name, email, password } = req.body
-
-    if (!name || !email || !password) {
-        return res.status(400).json({ message: 'name, email y password son obligatorios' })
-    }
-
-    try {
-        const passwordHash = await bcrypt.hash(password, 10)
-        const user = await AppDataSource.transaction(async (transactionalEntityManager) => {
-            const userRepository = transactionalEntityManager.getRepository(User)
-            const walletRepository = transactionalEntityManager.getRepository(Wallet)
-
-            const newUser = userRepository.create({
-                name,
-                email,
-                password: passwordHash
-            })
-            const savedUser = await userRepository.save(newUser)
-
-            const wallet = walletRepository.create({ user: savedUser })
-            await walletRepository.save(wallet)
-
-            return savedUser
-        })
-
-        return res.status(201).json({
-            id: user.id,
-            name: user.name,
-            email: user.email
-        })
-    } catch (error) {
-        if (error.code === 'ER_DUP_ENTRY') {
-            return res.status(409).json({ message: 'El email ya está registrado' })
-        }
-
-        return res.status(500).json({ message: 'No se pudo crear el usuario' })
-    }
-})
 
 
 
@@ -99,7 +59,7 @@ app.post('/api/auth/login', async (req, res) => {
 
 
 
-app.get('/api/healt',(req,res)=>{
+app.get('/api/health',(req,res)=>{
     res.status(200).json({
         status:'ok',
         message: 'SubastaYa api funcionando'
