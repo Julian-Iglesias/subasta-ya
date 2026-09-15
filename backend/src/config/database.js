@@ -6,6 +6,8 @@ const Wallet=require('../entities/Wallet')
 const Category=require('../entities/Category')
 const Auction=require('../entities/Auction')
 const Bid=require('../entities/Bid')
+const LedgerEntry=require('../entities/LedgerEntry')
+const AuditLog=require('../entities/AuditLog')
 
 const AppDataSource=new DataSource({
 	type:'mysql',
@@ -17,7 +19,7 @@ const AppDataSource=new DataSource({
 
 	synchronize: false,
 	logging:false,
-	entities: [User, Wallet, Category, Auction, Bid],
+	entities: [User, Wallet, Category, Auction, Bid, LedgerEntry, AuditLog],
 	migrations: [__dirname+'/../migrations/*.js'],
 })
 

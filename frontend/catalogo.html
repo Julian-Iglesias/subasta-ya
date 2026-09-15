@@ -16,7 +16,7 @@
                 <h1>Subastas</h1>
                 <p>Encontrá oportunidades, compará ofertas y elegí tu próxima puja.</p>
             </div>
-            <button class="button" type="button">Crear subasta</button>
+            <button class="button" id="open-auction-modal" type="button">Crear subasta</button>
         </div>
 
         <section class="catalog-toolbar" aria-label="Filtros del catálogo">
@@ -45,6 +45,75 @@
         <div id="catalog-message" class="catalog-message" role="status" aria-live="polite">Cargando subastas...</div>
         <section class="auction-grid" id="auction-grid" aria-label="Listado de subastas"></section>
     </main>
+
+    <div class="modal-backdrop" id="auction-modal" hidden>
+        <section class="modal" role="dialog" aria-modal="true" aria-labelledby="auction-modal-title">
+            <div class="modal-header">
+                <div>
+                    <p class="eyebrow-dark">PUBLICAR</p>
+                    <h2 id="auction-modal-title">Crear subasta</h2>
+                </div>
+                <button class="modal-close" id="close-auction-modal" type="button" aria-label="Cerrar">&times;</button>
+            </div>
+
+            <form id="auction-form" novalidate>
+                <div class="form-grid">
+                    <div class="field-group full-width">
+                        <label for="auction-title">Título</label>
+                        <input id="auction-title" name="title" type="text" placeholder="Ej. Cámara mirrorless">
+                        <span class="field-error" data-error-for="title"></span>
+                    </div>
+                    <div class="field-group full-width">
+                        <label for="auction-description">Descripción</label>
+                        <textarea id="auction-description" name="description" placeholder="Describí el producto"></textarea>
+                        <span class="field-error" data-error-for="description"></span>
+                    </div>
+                    <div class="field-group">
+                        <label for="auction-image-url">URL de imagen</label>
+                        <input id="auction-image-url" name="imageUrl" type="url" placeholder="https://...">
+                        <span class="field-error" data-error-for="imageUrl"></span>
+                    </div>
+                    <div class="field-group">
+                        <label for="auction-category">Categoría</label>
+                        <select id="auction-category" name="categoryId">
+                            <option value="">Seleccioná una categoría</option>
+                            <option value="1">Tecnología</option>
+                            <option value="2">Coleccionables</option>
+                            <option value="3">Indumentaria</option>
+                            <option value="4">Vehículos</option>
+                        </select>
+                        <span class="field-error" data-error-for="categoryId"></span>
+                    </div>
+                    <div class="field-group">
+                        <label for="auction-base-price">Precio base</label>
+                        <input id="auction-base-price" name="basePrice" type="number" step="0.01" placeholder="$ 10.000">
+                        <span class="field-error" data-error-for="basePrice"></span>
+                    </div>
+                    <div class="field-group">
+                        <label for="auction-minimum-increment">Incremento mínimo</label>
+                        <input id="auction-minimum-increment" name="minimumIncrement" type="number" step="0.01" placeholder="$ 500">
+                        <span class="field-error" data-error-for="minimumIncrement"></span>
+                    </div>
+                    <div class="field-group">
+                        <label for="auction-start-date">Fecha y hora de inicio</label>
+                        <input id="auction-start-date" name="startDate" type="datetime-local">
+                        <span class="field-error" data-error-for="startDate"></span>
+                    </div>
+                    <div class="field-group">
+                        <label for="auction-end-date">Fecha y hora de fin</label>
+                        <input id="auction-end-date" name="endDate" type="datetime-local">
+                        <span class="field-error" data-error-for="endDate"></span>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button class="button-secondary" id="cancel-auction-modal" type="button">Cancelar</button>
+                    <button class="button" id="submit-auction" type="submit">Publicar subasta</button>
+                </div>
+                <p class="feedback" id="auction-feedback" role="status" aria-live="polite"></p>
+            </form>
+        </section>
+    </div>
 
     <script src="./navigation.js"></script>
     <script src="./catalogo.js"></script>

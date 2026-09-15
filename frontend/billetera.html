@@ -15,13 +15,13 @@
                 <h1>Mi billetera</h1>
                 <p>Consultá tus fondos y movimientos de ejemplo para entender cómo se verá este módulo.</p>
             </div>
-            <button class="button" type="button">Cargar saldo</button>
+            <button class="button" id="open-deposit-modal" type="button">Cargar saldo</button>
         </div>
 
         <div class="stats-grid">
-            <article class="stat-card"><p class="card-label">Saldo total</p><strong>$150.000</strong></article>
-            <article class="stat-card"><p class="card-label">Saldo retenido</p><strong>$45.000</strong></article>
-            <article class="stat-card available"><p class="card-label">Saldo disponible</p><strong>$105.000</strong></article>
+            <article class="stat-card"><p class="card-label">Saldo total</p><strong id="total-balance">Cargando...</strong></article>
+            <article class="stat-card"><p class="card-label">Saldo retenido</p><strong id="held-balance">Cargando...</strong></article>
+            <article class="stat-card available"><p class="card-label">Saldo disponible</p><strong id="available-balance">Cargando...</strong></article>
         </div>
 
         <section class="panel">
@@ -29,15 +29,36 @@
             <div class="table-wrap">
                 <table class="data-table">
                     <thead><tr><th>Fecha</th><th>Concepto</th><th>Estado</th><th>Monto</th></tr></thead>
-                    <tbody>
-                        <tr><td>Hoy, 18:18</td><td>Retención por puja</td><td>Activo</td><td class="negative">-$45.000</td></tr>
-                        <tr><td>Ayer, 10:04</td><td>Carga de saldo</td><td>Acreditado</td><td class="positive">+$150.000</td></tr>
-                        <tr><td>12/09/2026</td><td>Liberación de retención</td><td>Completado</td><td class="positive">+$25.000</td></tr>
-                    </tbody>
+                    <tbody id="movements-body"><tr><td colspan="4">Cargando movimientos...</td></tr></tbody>
                 </table>
             </div>
+            <p id="wallet-message" class="feedback" role="status" aria-live="polite"></p>
         </section>
     </main>
+    <div class="modal-backdrop" id="deposit-modal" hidden>
+        <section class="modal" role="dialog" aria-modal="true" aria-labelledby="deposit-modal-title">
+            <div class="modal-header">
+                <div>
+                    <p class="eyebrow-dark">BILLETERA</p>
+                    <h2 id="deposit-modal-title">Cargar saldo</h2>
+                </div>
+                <button class="modal-close" id="close-deposit-modal" type="button" aria-label="Cerrar">&times;</button>
+            </div>
+            <form id="deposit-form" novalidate>
+                <div class="field-group">
+                    <label for="deposit-amount">Monto</label>
+                    <input id="deposit-amount" name="amount" type="number" min="0.01" step="0.01" placeholder="$ 10.000">
+                    <span class="field-error" id="deposit-error"></span>
+                </div>
+                <div class="modal-actions">
+                    <button class="button-secondary" id="cancel-deposit-modal" type="button">Cancelar</button>
+                    <button class="button" id="submit-deposit" type="submit" disabled>Cargar saldo</button>
+                </div>
+                <p id="deposit-feedback" class="feedback" role="status" aria-live="polite"></p>
+            </form>
+        </section>
+    </div>
     <script src="./navigation.js"></script>
+    <script src="./billetera.js"></script>
 </body>
 </html>

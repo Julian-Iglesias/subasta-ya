@@ -16,6 +16,7 @@ class CreateAuctions1788916145570 {
         \`current_bid\` decimal(12,2) NULL,
         \`current_winner_id\` int NULL,
         \`version\` int NOT NULL DEFAULT 1,
+        INDEX \`IDX_auctions_status_end_date\` (\`status\`, \`end_date\`),
         PRIMARY KEY (\`id\`),
         CONSTRAINT \`FK_auctions_seller\` FOREIGN KEY (\`seller_id\`) REFERENCES \`users\` (\`id\`),
         CONSTRAINT \`FK_auctions_category\` FOREIGN KEY (\`category_id\`) REFERENCES \`categories\` (\`id\`),
@@ -25,6 +26,7 @@ class CreateAuctions1788916145570 {
   }
 
   async down(queryRunner) {
+    await queryRunner.query(`DROP INDEX \`IDX_auctions_status_end_date\` ON \`auctions\``)
     await queryRunner.query(`DROP TABLE \`auctions\``)
   }
 }
