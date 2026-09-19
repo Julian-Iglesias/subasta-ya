@@ -153,7 +153,7 @@ async function parseApiResponse(response, fallbackMessage) {
 }
 
 function getApiErrorMessage(error, fallbackMessage) {
-    if (error.status === 404) return 'Esta sección todavía no está disponible en el backend.'
+    if (error.status === 404) return 'Todavía no disponible.'
     return error.message || fallbackMessage
 }
 
