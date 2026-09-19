@@ -5,6 +5,7 @@ const AppDataSource = require('./config/database')
 const User = require('./entities/User')
 const usersRoutes=require('./routes/users.routes')
 const authRoutes=require('./routes/auth.routes')
+const walletRoutes=require('./routes/wallet.routes')
 
 const app = express()
 
@@ -13,6 +14,7 @@ app.use(express.static(path.join(__dirname, '../../frontend')))
 
 app.use('/api/users',usersRoutes)
 app.use('/api/auth',authRoutes) 
+app.use('/api/wallets',walletRoutes)
 
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*')
