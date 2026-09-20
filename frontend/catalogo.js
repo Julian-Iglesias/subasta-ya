@@ -20,6 +20,7 @@ const auctionForm = document.querySelector('#auction-form')
 const auctionCategorySelect = document.querySelector('#auction-category')
 const submitAuctionButton = document.querySelector('#submit-auction')
 const auctionFeedback = document.querySelector('#auction-feedback')
+const loggedUser = getLoggedUser()
 
 const filters = {
     status: '',
@@ -324,6 +325,7 @@ async function submitAuction(event) {
     auctionFeedback.className = 'feedback'
 
     const payload = {
+        sellerId: loggedUser?.id,
         title: data.title.trim(),
         description: data.description.trim(),
         imageUrl: data.imageUrl.trim() || null,
@@ -364,5 +366,13 @@ async function submitAuction(event) {
     } finally {
         submitAuctionButton.disabled = false
         submitAuctionButton.innerHTML = 'Publicar subasta'
+    }
+}
+
+function getLoggedUser() {
+    try {
+        return JSON.parse(localStorage.getItem('subastaya_user'))
+    } catch (error) {
+        return null
     }
 }
