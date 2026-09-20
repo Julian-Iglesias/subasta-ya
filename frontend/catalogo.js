@@ -1,10 +1,10 @@
 const API_URL = 'http://localhost:3000/api'
 const PLACEHOLDER_IMAGE = 'https://placehold.co/800x500/e6e8df/68756e?text=SubastaYa'
 const DEFAULT_CATEGORIES = [
-    { id: 1, name: 'Tecnología' },
+    { id: 1, name: 'Tecnologia' },
     { id: 2, name: 'Coleccionables' },
     { id: 3, name: 'Indumentaria' },
-    { id: 4, name: 'Vehículos' }
+    { id: 4, name: 'Vehiculos' }
 ]
 
 const auctionGrid = document.querySelector('#auction-grid')
