@@ -15,7 +15,21 @@ const depositError = document.querySelector('#deposit-error')
 const submitDepositButton = document.querySelector('#submit-deposit')
 const depositFeedback = document.querySelector('#deposit-feedback')
 
-initializeWallet()
+const loggedUser = getLoggedUser()
+
+if (!loggedUser || !loggedUser.id) {
+    window.location.replace('index.html')
+} else {
+    initializeWallet()
+}
+
+function getLoggedUser() {
+    try {
+        return JSON.parse(localStorage.getItem('subastaya_user'))
+    } catch (error) {
+        return null
+    }
+}
 
 async function initializeWallet() {
     setWalletLoadingState()
@@ -33,7 +47,7 @@ function bindWalletEvents() {
 
 async function loadBalance() {
     try {
-        const response = await fetch(`${API_URL}/wallet/balance`)
+        const response = await fetch(`${API_URL}/wallets/${encodeURIComponent(loggedUser.id)}`)
         const result = await parseApiResponse(response, 'No se pudo cargar el saldo.')
         const balance = result.balance || result.data || result
 
@@ -50,7 +64,7 @@ async function loadBalance() {
 
 async function loadMovements() {
     try {
-        const response = await fetch(`${API_URL}/wallet/movements`)
+        const response = await fetch(`${API_URL}/wallets/${encodeURIComponent(loggedUser.id)}/transactions`)
         const result = await parseApiResponse(response, 'No se pudieron cargar los movimientos.')
         const movements = Array.isArray(result) ? result : result.movements || result.data || []
         renderMovements(movements)
@@ -76,7 +90,7 @@ function renderMovements(movements) {
 
         row.innerHTML = `
             <td>${escapeHtml(formatDate(movement.createdAt || movement.created_at || movement.date))}</td>
-            <td>${escapeHtml(movement.concept || movement.type || 'Movimiento')}</td>
+            <td>${escapeHtml(movement.concept || movement.tpye || 'Movimiento')}</td>
             <td>${escapeHtml(movement.status || 'Completado')}</td>
             <td class="${amountClass}">${formattedAmount}</td>
         `
@@ -126,7 +140,7 @@ async function submitDeposit(event) {
     depositFeedback.className = 'feedback'
 
     try {
-        const response = await fetch(`${API_URL}/wallet/deposit`, {
+        const response = await fetch(`${API_URL}/wallets/${encodeURIComponent(loggedUser.id)}/deposits`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ amount: Number(depositAmount.value) })

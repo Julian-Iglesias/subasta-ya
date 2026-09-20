@@ -5,6 +5,7 @@ const Wallet = require("../entities/Wallet");
 const LedgerEntry = require("../entities/LedgerEntry");
 const Bid = require("../entities/Bid");
 const {createAuditLog} = require('./audit.repository')
+const AuditLog = require("../entities/AuditLog");
 
 const findAuctionById = async (auctionId) => {
   const auctionRepository = AppDataSource.getRepository(Auction);
@@ -33,6 +34,7 @@ const createBidWithEscrow = async ({ auctionId, userId, amount }) => {
     const walletRepository = manager.getRepository(Wallet);
     const bidRepository = manager.getRepository(Bid);
     const ledgerRepository = manager.getRepository(LedgerEntry);
+    const auditRepository = manager.getRepository(AuditLog);
 
     const auction = await auctionRepository.findOne({
       where: {
@@ -142,7 +144,6 @@ const createBidWithEscrow = async ({ auctionId, userId, amount }) => {
       throw error;
     }
 
-    // Liberar saldo del ganador anterior
     if (auction.currentWinner && auction.currentWinner.id !== Number(userId)) {
       const previousWinnerWallet = await walletRepository.findOne({
         where: {
@@ -179,12 +180,10 @@ const createBidWithEscrow = async ({ auctionId, userId, amount }) => {
       await ledgerRepository.save(releaseEntry);
     }
 
-    // Retener saldo del nuevo ganador
     wallet.heldBalance = Number(wallet.heldBalance) + amountToHold;
 
     await walletRepository.save(wallet);
 
-    // Crear la puja
     const newBid = bidRepository.create({
       auction: auction,
       bidder: wallet.user,
@@ -193,7 +192,6 @@ const createBidWithEscrow = async ({ auctionId, userId, amount }) => {
 
     const savedBid = await bidRepository.save(newBid);
 
-    // Actualizar quién está ganando la subasta
     const updateResult = await auctionRepository
       .createQueryBuilder()
       .update(Auction)
@@ -211,6 +209,25 @@ const createBidWithEscrow = async ({ auctionId, userId, amount }) => {
       .execute();
 
     if (updateResult.affected !== 1) {
+      try {
+        await AppDataSource.getRepository(AuditLog).save(
+          AppDataSource.getRepository(AuditLog).create({
+            eventType: "BID_REJECTED_CONCURRENCY",
+            entityType: "Auction",
+            entityId: Number(auctionId),
+            user: wallet.user,
+            description: "La puja fue rechazada por un conflicto de versión concurrente.",
+            metadata: {
+              auctionId: Number(auctionId),
+              amount: Number(amount),
+              expectedVersion,
+            },
+          }),
+        );
+      } catch (auditError) {
+        console.error("No se pudo registrar la auditoría de concurrencia", auditError);
+      }
+
       const error = new Error("La subasta fue modificada por otra puja");
       error.statusCode = 409;
       throw error;
@@ -230,7 +247,6 @@ const createBidWithEscrow = async ({ auctionId, userId, amount }) => {
       });
     }
 
-    // Registrar la retención
     const holdEntry = ledgerRepository.create({
       wallet: wallet,
       type: "HOLD",
@@ -241,6 +257,36 @@ const createBidWithEscrow = async ({ auctionId, userId, amount }) => {
     });
 
     await ledgerRepository.save(holdEntry);
+
+    await auditRepository.save(
+      auditRepository.create({
+        eventType: "BID_PLACED",
+        entityType: "Auction",
+        entityId: auction.id,
+        user: wallet.user,
+        description: `Puja aceptada por ${Number(amount)}${auction.currentWinner ? " y superó al postor anterior" : ""}.`,
+        metadata: {
+          amount: Number(amount),
+          previousBid,
+        },
+      }),
+    );
+
+    if (wasExtended) {
+      await auditRepository.save(
+        auditRepository.create({
+          eventType: "ANTI_SNIPING_EXTENSION",
+          entityType: "Auction",
+          entityId: auction.id,
+          user: wallet.user,
+          description: "La fecha de cierre se extendió 2 minutos por Anti-Sniping.",
+          metadata: {
+            previousEndDate: auction.endDate,
+            newEndDate,
+          },
+        }),
+      );
+    }
 
     return savedBid;
   });

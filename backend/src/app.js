@@ -7,6 +7,8 @@ const usersRoutes=require('./routes/users.routes')
 const authRoutes=require('./routes/auth.routes')
 const walletRoutes=require('./routes/wallet.routes')
 const bidRoutes = require('./routes/bid.routes')
+const auctionRoutes = require('./routes/auction.routes')
+const categoryRoutes = require('./routes/category.routes')
 
 const app = express()
 
@@ -16,6 +18,8 @@ app.use(express.static(path.join(__dirname, '../../frontend')))
 app.use('/api/users',usersRoutes)
 app.use('/api/auth',authRoutes) 
 app.use('/api/wallets',walletRoutes)
+app.use('/api/auctions', auctionRoutes)
+app.use('/api/categories', categoryRoutes)
 app.use('/api/auctions', bidRoutes)
 
 app.use((req, res, next) => {
