@@ -125,7 +125,6 @@ const createBidWithEscrow = async ({ auctionId, userId, amount }) => {
       throw error;
     }
 
-    // Liberar saldo del ganador anterior
     if (auction.currentWinner && auction.currentWinner.id !== Number(userId)) {
       const previousWinnerWallet = await walletRepository.findOne({
         where: {
@@ -162,12 +161,10 @@ const createBidWithEscrow = async ({ auctionId, userId, amount }) => {
       await ledgerRepository.save(releaseEntry);
     }
 
-    // Retener saldo del nuevo ganador
     wallet.heldBalance = Number(wallet.heldBalance) + amountToHold;
 
     await walletRepository.save(wallet);
 
-    // Crear la puja
     const newBid = bidRepository.create({
       auction: auction,
       bidder: wallet.user,
@@ -176,7 +173,6 @@ const createBidWithEscrow = async ({ auctionId, userId, amount }) => {
 
     const savedBid = await bidRepository.save(newBid);
 
-    // Actualizar quién está ganando la subasta
     const updateResult = await auctionRepository
       .createQueryBuilder()
       .update(Auction)
@@ -199,7 +195,6 @@ const createBidWithEscrow = async ({ auctionId, userId, amount }) => {
       throw error;
     }
 
-    // Registrar la retención
     const holdEntry = ledgerRepository.create({
       wallet: wallet,
       type: "HOLD",
