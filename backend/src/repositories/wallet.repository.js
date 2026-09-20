@@ -1,6 +1,7 @@
 const AppDataSource=require('../config/database')
 const Wallet = require('../entities/Wallet')
 const LedgerEntry=require('../entities/LedgerEntry')
+const {createAuditLog} = require('./audit.repository')
 
 const findWalletByUserId=async(userId)=>{
     const walletRepository=AppDataSource.getRepository(Wallet)
@@ -17,6 +18,9 @@ const depositToWallet=async(userId,amount)=>{
         const savedWallet=await walletRepository.save(wallet)
         const ledgerEntry=ledgerRepository.create({wallet:savedWallet,type:'DEPOSIT',amount: Number(amount),balanceAfter:Number(savedWallet.totalBalance)})
         await ledgerRepository.save(ledgerEntry)
+
+        await createAuditLog(manager, {eventType: 'WALLET_DEPOSIT',entityType: 'WALLET',entityId: savedWallet.id,description: 'Carga manual de saldo en billetera',metadata: {amount: Number(amount),newBalance: Number(savedWallet.totalBalance)},user: savedWallet.user})
+        
         return savedWallet
     })
 }

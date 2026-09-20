@@ -1,4 +1,6 @@
 const {findAuctionById,findUserById,findWalletByUserId,createBidWithEscrow}=require('../repositories/bid.repository')
+const {createAuditLogStandalone} = require('../repositories/audit.repository')
+
 
 const validateBid=async ({auctionId,userId,amount})=>{
     const auction =await findAuctionById(auctionId)
@@ -78,27 +80,23 @@ const validateBid=async ({auctionId,userId,amount})=>{
 
 
 const placeBid = async ({ auctionId, userId, amount }) => {
-
-    const validation = await validateBid({
-        auctionId,
-        userId,
-        amount
-    })
-
-    const savedBid = await createBidWithEscrow({
-        auctionId,
-        userId,
-        amount: validation.amount
-    })
+  try {
+    const validation = await validateBid({auctionId,userId,amount,})
+    const savedBid = await createBidWithEscrow({auctionId,userId,amount: validation.amount,})
 
     return {
-        message: 'Puja realizada correctamente',
-        bid: {
-            id: savedBid.id,
-            amount: Number(savedBid.amount),
-            createdAt: savedBid.createdAt
-        }
+      message: "Puja realizada correctamente",
+      bid: {id: savedBid.id,amount: Number(savedBid.amount),createdAt: savedBid.createdAt,}}
+  } catch (error) {
+    try {
+      await createAuditLogStandalone({
+        eventType: "BID_REJECTED",entityType: "AUCTION",entityId: Number(auctionId),description: "Puja rechazada",
+        metadata: {amount: amount,reason: error.message,statusCode: error.statusCode || 500,},userId: userId,});
+    } catch (auditError) {
+      console.error("No se pudo registrar la auditoría:", auditError.message);
     }
-}
+    throw error;
+  }
+};
 
 module.exports={validateBid, placeBid}
