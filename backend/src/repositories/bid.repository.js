@@ -4,6 +4,7 @@ const AppDataSource = require("../config/database");
 const Wallet = require("../entities/Wallet");
 const LedgerEntry = require("../entities/LedgerEntry");
 const Bid = require("../entities/Bid");
+const {createAuditLog} = require('./audit.repository')
 const AuditLog = require("../entities/AuditLog");
 
 const findAuctionById = async (auctionId) => {
@@ -83,7 +84,7 @@ const createBidWithEscrow = async ({ auctionId, userId, amount }) => {
 
     const millisecondsRemaining =
       new Date(auction.endDate).getTime() - now.getTime();
-
+    const oldEndDate = new Date(auction.endDate)
     let newEndDate = new Date(auction.endDate);
     let wasExtended = false;
 
@@ -230,6 +231,20 @@ const createBidWithEscrow = async ({ auctionId, userId, amount }) => {
       const error = new Error("La subasta fue modificada por otra puja");
       error.statusCode = 409;
       throw error;
+    }
+    if (wasExtended) {
+      await createAuditLog(manager, {
+        eventType: "ANTI_SNIPING_EXTENDED",
+        entityType: "AUCTION",
+        entityId: Number(auctionId),
+        description: "Subasta extendida por una puja en el último minuto",
+        metadata: {
+          oldEndDate: oldEndDate.toISOString(),
+          newEndDate: newEndDate.toISOString(),
+          bidAmount: Number(amount),
+        },
+        user: wallet.user,
+      });
     }
 
     const holdEntry = ledgerRepository.create({
