@@ -78,6 +78,22 @@ const createBidWithEscrow = async ({ auctionId, userId, amount }) => {
       throw error;
     }
 
+
+    const millisecondsRemaining =
+      new Date(auction.endDate).getTime() - now.getTime();
+
+    let newEndDate = new Date(auction.endDate);
+    let wasExtended = false;
+
+    if (millisecondsRemaining > 0 && millisecondsRemaining <= 60000) {
+      newEndDate = new Date(
+        new Date(auction.endDate).getTime() + 2 * 60 * 1000,
+      );
+
+      wasExtended = true;
+    }
+
+
     const wallet = await walletRepository.findOne({
       where: {
         user: {
@@ -183,7 +199,7 @@ const createBidWithEscrow = async ({ auctionId, userId, amount }) => {
       .set({
         currentBid: Number(amount),
         currentWinner: wallet.user,
-        version: () => "version + 1",
+        version: () => "version + 1", endDate:newEndDate
       })
       .where("id = :auctionId", {
         auctionId: Number(auctionId),
