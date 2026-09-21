@@ -3,6 +3,8 @@ const Auction = require("../entities/Auction");
 const { createAuditLog } = require("./audit.repository");
 const Wallet = require("../entities/Wallet");
 const LedgerEntry = require("../entities/LedgerEntry");
+const User = require("../entities/User");
+const Category = require("../entities/Category");
 
 const findExpiredActiveAuctions = async () => {
   const auctionRepository = AppDataSource.getRepository(Auction);
@@ -18,6 +20,101 @@ const findExpiredActiveAuctions = async () => {
       now: new Date(),
     })
     .getMany();
+};
+
+const findUpcomingAuctionsToActivate = async () => {
+  const auctionRepository = AppDataSource.getRepository(Auction);
+  const now = new Date();
+
+  return await auctionRepository
+    .createQueryBuilder("auction")
+    .where("auction.status = :status", {
+      status: "UPCOMING",
+    })
+    .andWhere("auction.startDate <= :now", {
+      now,
+    })
+    .andWhere("auction.endDate > :now", {
+      now,
+    })
+    .getMany();
+};
+
+const activateAuction = async (auctionId) => {
+  return await AppDataSource.transaction(async (manager) => {
+    const auctionRepository = manager.getRepository(Auction);
+
+    const auction = await auctionRepository.findOne({
+      where: {
+        id: Number(auctionId),
+      },
+      relations: {
+        seller: true,
+      },
+    });
+
+    if (!auction) {
+      const error = new Error("Subasta no encontrada");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    if (auction.status !== "UPCOMING") {
+      return auction;
+    }
+
+    const now = new Date();
+
+    if (now < new Date(auction.startDate)) {
+      return auction;
+    }
+
+    if (now >= new Date(auction.endDate)) {
+      return auction;
+    }
+
+    const expectedVersion = auction.version;
+
+    const updateResult = await auctionRepository
+      .createQueryBuilder()
+      .update(Auction)
+      .set({
+        status: "ACTIVE",
+        version: () => "version + 1",
+      })
+      .where("id = :auctionId", {
+        auctionId: auction.id,
+      })
+      .andWhere("version = :expectedVersion", {
+        expectedVersion,
+      })
+      .andWhere("status = :status", {
+        status: "UPCOMING",
+      })
+      .execute();
+
+    if (updateResult.affected !== 1) {
+      const error = new Error("La subasta ya fue modificada por otro proceso");
+      error.statusCode = 409;
+      throw error;
+    }
+
+    auction.status = "ACTIVE";
+    auction.version = expectedVersion + 1;
+
+    await createAuditLog(manager, {
+      eventType: "AUCTION_ACTIVATED",
+      entityType: "AUCTION",
+      entityId: auction.id,
+      description: "La subasta comenzó y pasó a estado ACTIVE",
+      metadata: {
+        startDate: auction.startDate,
+      },
+      user: auction.seller,
+    });
+
+    return auction;
+  });
 };
 
 const closeExpiredAuction = async (auctionId) => {
@@ -116,6 +213,14 @@ const closeExpiredAuction = async (auctionId) => {
     if (!winnerWallet) {
       const error = new Error("Billetera del ganador no encontrada");
       error.statusCode = 500;
+      throw error;
+    }
+
+    if (Number(winnerWallet.heldBalance) < winningAmount) {
+      const error = new Error(
+        "El saldo retenido del ganador no alcanza para liquidar la subasta",
+      );
+      error.statusCode = 409;
       throw error;
     }
 
@@ -225,7 +330,62 @@ const closeExpiredAuction = async (auctionId) => {
   });
 };
 
+const findSellerById = async (sellerId) => {
+  const userRepository = AppDataSource.getRepository(User);
+
+  return await userRepository.findOne({
+    where: {
+      id: Number(sellerId),
+    },
+  });
+};
+
+const findCategoryById = async (categoryId) => {
+  const categoryRepository = AppDataSource.getRepository(Category);
+
+  return await categoryRepository.findOne({
+    where: {
+      id: Number(categoryId),
+    },
+  });
+};
+
+const createAuction = async ({
+  seller,
+  category,
+  title,
+  description,
+  imageUrl,
+  basePrice,
+  minimumIncrement,
+  startDate,
+  endDate,
+  status,
+}) => {
+  const auctionRepository = AppDataSource.getRepository(Auction);
+
+  const auction = auctionRepository.create({
+    seller,
+    category,
+    title,
+    description,
+    imageUrl,
+    basePrice,
+    minimumIncrement,
+    startDate,
+    endDate,
+    status,
+  });
+
+  return await auctionRepository.save(auction);
+};
+
 module.exports = {
   findExpiredActiveAuctions,
   closeExpiredAuction,
+  findSellerById,
+  findCategoryById,
+  createAuction,
+  findUpcomingAuctionsToActivate,
+  activateAuction,
 };

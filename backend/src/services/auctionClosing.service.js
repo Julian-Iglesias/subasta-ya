@@ -1,7 +1,30 @@
 const {
   findExpiredActiveAuctions,
   closeExpiredAuction,
-} = require("../repositories/auction.repository");
+  findUpcomingAuctionsToActivate,
+  activateAuction
+} = require('../repositories/auction.repository')
+
+
+
+const activateUpcomingAuctions = async () => {
+  const upcomingAuctions =
+    await findUpcomingAuctionsToActivate()
+
+  for (const auction of upcomingAuctions) {
+    try {
+      await activateAuction(auction.id)
+
+      console.log(`Subasta ${auction.id} activada`)
+    } catch (error) {
+      console.error(
+        `Error activando subasta ${auction.id}:`,
+        error.message
+      )
+    }
+  }
+}
+
 
 const closeExpiredAuctions = async () => {
   const expiredAuctions = await findExpiredActiveAuctions();
@@ -19,4 +42,5 @@ const closeExpiredAuctions = async () => {
 
 module.exports = {
   closeExpiredAuctions,
-};
+  activateUpcomingAuctions
+}
