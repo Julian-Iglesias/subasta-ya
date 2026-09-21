@@ -3,8 +3,14 @@ const http = require("http");
 const { Server } = require("socket.io");
 const app = require("./app");
 const AppDataSource = require("./config/database");
-const { closeExpiredAuctions } = require("./services/auctionClosing.service");
+
+const {
+  closeExpiredAuctions,
+  activateUpcomingAuctions,
+} = require("./services/auctionClosing.service");
+
 const { init } = require("./socket");
+
 
 const PORT = process.env.PORT || 3000;
 const httpServer = http.createServer(app);
@@ -19,9 +25,13 @@ AppDataSource.initialize()
       console.log(`Servidor corriendo en http://localhost:${PORT}`);
       setInterval(async () => {
         try {
+          await activateUpcomingAuctions();
           await closeExpiredAuctions();
         } catch (error) {
-          console.error("Error revisando subastas vencidas:", error.message);
+          console.error(
+            "Error actualizando estados de subastas:",
+            error.message,
+          );
         }
       }, 30000);
     });
