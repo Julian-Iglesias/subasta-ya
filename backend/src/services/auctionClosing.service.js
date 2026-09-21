@@ -8,23 +8,20 @@ const {
 const { getIO } = require("../socket");
 
 const activateUpcomingAuctions = async () => {
-  const upcomingAuctions =
-    await findUpcomingAuctionsToActivate();
+  const upcomingAuctions = await findUpcomingAuctionsToActivate();
 
   for (const auction of upcomingAuctions) {
     try {
-      await activateAuction(auction.id);
+      const updatedAuction = await activateAuction(auction.id);
 
-      console.log(`Subasta ${auction.id} activada`);
-    } catch (error) {
-      console.error(
-        `Error activando subasta ${auction.id}:`,
-        error.message
+      console.log(
+        `Subasta ${auction.id} actualizada a ${updatedAuction.status}`,
       );
+    } catch (error) {
+      console.error(`Error actualizando subasta ${auction.id}:`, error.message);
     }
   }
 };
-
 
 const closeExpiredAuctions = async () => {
   const expiredAuctions = await findExpiredActiveAuctions();
@@ -49,5 +46,5 @@ const closeExpiredAuctions = async () => {
 
 module.exports = {
   closeExpiredAuctions,
-  activateUpcomingAuctions
-}
+  activateUpcomingAuctions,
+};

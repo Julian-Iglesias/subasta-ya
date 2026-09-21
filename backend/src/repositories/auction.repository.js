@@ -26,17 +26,10 @@ const findUpcomingAuctionsToActivate = async () => {
   const auctionRepository = AppDataSource.getRepository(Auction);
   const now = new Date();
 
-  return await auctionRepository
+  return auctionRepository
     .createQueryBuilder("auction")
-    .where("auction.status = :status", {
-      status: "UPCOMING",
-    })
-    .andWhere("auction.startDate <= :now", {
-      now,
-    })
-    .andWhere("auction.endDate > :now", {
-      now,
-    })
+    .where("auction.status = :status", { status: "UPCOMING" })
+    .andWhere("auction.startDate <= :now", { now })
     .getMany();
 };
 
@@ -69,11 +62,53 @@ const activateAuction = async (auctionId) => {
       return auction;
     }
 
+    const expectedVersion = auction.version;
+
     if (now >= new Date(auction.endDate)) {
+      const updateResult = await auctionRepository
+        .createQueryBuilder()
+        .update(Auction)
+        .set({
+          status: "DESERTED",
+          version: () => "version + 1",
+        })
+        .where("id = :auctionId", {
+          auctionId: auction.id,
+        })
+        .andWhere("version = :expectedVersion", {
+          expectedVersion,
+        })
+        .andWhere("status = :status", {
+          status: "UPCOMING",
+        })
+        .execute();
+
+      if (updateResult.affected !== 1) {
+        const error = new Error(
+          "La subasta ya fue modificada por otro proceso"
+        );
+        error.statusCode = 409;
+        throw error;
+      }
+
+      auction.status = "DESERTED";
+      auction.version = expectedVersion + 1;
+
+      await createAuditLog(manager, {
+        eventType: "AUCTION_DESERTED",
+        entityType: "AUCTION",
+        entityId: auction.id,
+        description:
+          "La subasta venció antes de ser activada y pasó a estado DESERTED",
+        metadata: {
+          startDate: auction.startDate,
+          endDate: auction.endDate,
+        },
+        user: auction.seller,
+      });
+
       return auction;
     }
-
-    const expectedVersion = auction.version;
 
     const updateResult = await auctionRepository
       .createQueryBuilder()
@@ -94,7 +129,9 @@ const activateAuction = async (auctionId) => {
       .execute();
 
     if (updateResult.affected !== 1) {
-      const error = new Error("La subasta ya fue modificada por otro proceso");
+      const error = new Error(
+        "La subasta ya fue modificada por otro proceso"
+      );
       error.statusCode = 409;
       throw error;
     }
