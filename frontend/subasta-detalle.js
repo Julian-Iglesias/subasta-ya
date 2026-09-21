@@ -2,6 +2,7 @@ const API_URL = 'http://localhost:3000/api'
 const PLACEHOLDER_IMAGE = 'https://placehold.co/800x500/e6e8df/68756e?text=SubastaYa'
 
 const auctionId = new URLSearchParams(window.location.search).get('id')
+const socket = io('http://localhost:3000')
 const loggedUser = getLoggedUser()
 const detailContent = document.querySelector('#detail-content')
 const detailError = document.querySelector('#detail-error')
@@ -27,8 +28,29 @@ const sellerName = document.querySelector('#seller-name')
 const winnerName = document.querySelector('#winner-name')
 
 let currentAuction
-let pollingTimer
 let countdownTimer
+
+socket.on('connect', () => {
+    if (auctionId) socket.emit('join-auction', auctionId)
+})
+
+socket.on('auction-updated', (data) => {
+    currentAuction = data.auction || data.data || data
+    renderAuction(currentAuction)
+    hideDetailError()
+
+    if (data.wasExtended) {
+        bidFeedback.textContent = 'La subasta se extendió 2 minutos por una puja en el último minuto.'
+        bidFeedback.className = 'feedback success'
+    }
+})
+
+socket.on('auction-closed', (data) => {
+    currentAuction = { ...currentAuction, status: data.status }
+    renderAuction(currentAuction)
+    bidAmount.disabled = true
+    submitBidButton.disabled = true
+})
 
 if (!loggedUser || !loggedUser.id) {
     window.location.replace('index.html')
@@ -52,6 +74,7 @@ function normalizeStatus(status) {
         ACTIVE: 'Activa',
         UPCOMING: 'Próxima',
         FINISHED: 'Finalizada',
+        FINALIZED: 'Finalizada',
         DESIERTA: 'Desierta',
         LEADING: 'Liderando',
         WON: 'Ganada',
@@ -66,13 +89,10 @@ async function initializeAuctionDetail() {
 
     if (currentAuction) {
         countdownTimer = window.setInterval(updateCountdown, 1000)
-        pollingTimer = window.setInterval(() => {
-            if (!document.hidden) loadAuction(true)
-        }, 3000)
     }
 }
 
-async function loadAuction(isPolling = false) {
+async function loadAuction() {
     try {
         const response = await fetch(`${API_URL}/auctions/${encodeURIComponent(auctionId)}`)
         const result = await parseApiResponse(response, 'No se pudo cargar la subasta.')
@@ -80,10 +100,8 @@ async function loadAuction(isPolling = false) {
         renderAuction(currentAuction)
         hideDetailError()
     } catch (error) {
-        if (!isPolling || error.status === 404) {
-            stopPolling()
-            showDetailError(getApiErrorMessage(error))
-        }
+        stopCountdown()
+        showDetailError(getApiErrorMessage(error))
     }
 }
 
@@ -231,7 +249,7 @@ async function submitBid(event) {
         bidFeedback.textContent = error.message
         bidFeedback.className = 'feedback error'
     } finally {
-        submitBidButton.disabled = false
+        submitBidButton.disabled = currentAuction?.status !== 'ACTIVE'
         submitBidButton.innerHTML = 'Pujar'
     }
 }
@@ -262,10 +280,8 @@ function hideDetailError() {
     detailError.hidden = true
 }
 
-function stopPolling() {
-    if (pollingTimer) window.clearInterval(pollingTimer)
+function stopCountdown() {
     if (countdownTimer) window.clearInterval(countdownTimer)
-    pollingTimer = undefined
     countdownTimer = undefined
 }
 

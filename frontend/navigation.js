@@ -7,8 +7,9 @@ const navigationTemplate = `
             <button class="nav-link-disabled" type="button" aria-disabled="true">Vender</button>
             <div class="profile">
                 <button class="profile-trigger" type="button" aria-expanded="false" aria-controls="profile-menu">
-                    <span class="profile-icon">SY</span>
-                    <span>Perfil</span>
+                    <span class="profile-icon" aria-hidden="true">SY</span>
+                    <span class="profile-name"></span>
+                    <span class="profile-arrow" aria-hidden="true">⌄</span>
                 </button>
                 <div class="profile-menu" id="profile-menu" hidden>
                     <a href="mis-actividades.html#pujas">Mis pujas</a>
@@ -27,6 +28,10 @@ document.querySelector('[data-app-header]').innerHTML = navigationTemplate
 
 const profileTrigger = document.querySelector('.profile-trigger')
 const profileMenu = document.querySelector('.profile-menu')
+const profileName = document.querySelector('.profile-name')
+const navigationUser = getLoggedUser()
+
+profileName.textContent = navigationUser?.name || navigationUser?.email || 'Perfil'
 
 profileTrigger.addEventListener('click', () => {
     const isOpen = profileTrigger.getAttribute('aria-expanded') === 'true'
@@ -44,3 +49,11 @@ document.addEventListener('click', (event) => {
 document.querySelector('[data-logout]').addEventListener('click', () => {
     localStorage.removeItem('subastaya_user')
 })
+
+function getLoggedUser() {
+    try {
+        return JSON.parse(localStorage.getItem('subastaya_user'))
+    } catch (error) {
+        return null
+    }
+}
