@@ -2,9 +2,6 @@
 
 Plataforma web de subastas en tiempo real con billetera virtual, escrow, anti-sniping y gestión transaccional segura.
 
-Trabajo Práctico Integral — Cátedra Proyecto de Software (UNAJ).
-Integrantes: Iglesias, Julian — Nasuti, Gianfranco.
-
 ## Estructura
 
 - `backend/`: API REST (Node.js + Express + TypeORM), lógica de negocio, WebSockets y worker de cierre de subastas.
