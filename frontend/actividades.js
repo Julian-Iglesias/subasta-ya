@@ -3,6 +3,7 @@ const API_URL = 'http://localhost:3000/api'
 const activityTabs = document.querySelectorAll('[data-activity-tab]')
 const bidsPanel = document.querySelector('#bids-panel')
 const publicationsPanel = document.querySelector('#publications-panel')
+const loggedUser = getLoggedUser()
 
 initializeActivities()
 
@@ -27,7 +28,7 @@ function bindActivityTabs() {
 
 async function loadBids() {
     try {
-        const response = await fetch(`${API_URL}/users/me/bids`)
+        const response = await fetch(`${API_URL}/users/${encodeURIComponent(loggedUser.id)}/bids`)
         const result = await parseApiResponse(response, 'No se pudieron cargar tus pujas.')
         const bids = Array.isArray(result) ? result : result.bids || result.data || []
         renderBids(bids)
@@ -38,10 +39,16 @@ async function loadBids() {
 
 async function loadPublications() {
     try {
-        const response = await fetch(`${API_URL}/users/me/auctions`)
-        const result = await parseApiResponse(response, 'No se pudieron cargar tus publicaciones.')
-        const auctions = Array.isArray(result) ? result : result.auctions || result.data || []
-        renderPublications(auctions)
+        const userPath = `${API_URL}/users/${encodeURIComponent(loggedUser.id)}`
+        const [auctionsResponse, bidsResponse] = await Promise.all([
+            fetch(`${userPath}/auctions`),
+            fetch(`${userPath}/bids`)
+        ])
+        const auctionsResult = await parseApiResponse(auctionsResponse, 'No se pudieron cargar tus publicaciones.')
+        const bidsResult = await parseApiResponse(bidsResponse, 'No se pudieron cargar tus pujas.')
+        const auctions = Array.isArray(auctionsResult) ? auctionsResult : auctionsResult.auctions || auctionsResult.data || []
+        const bids = Array.isArray(bidsResult) ? bidsResult : bidsResult.bids || bidsResult.data || []
+        renderPublications(auctions, bids)
     } catch (error) {
         showActivityError(publicationsPanel, getApiErrorMessage(error, 'No se pudieron cargar tus publicaciones.'))
     }
@@ -60,16 +67,17 @@ function renderBids(bids) {
         const row = createActivityRow(
             auction.title || bid.auctionTitle || 'Subasta sin título',
             bid.amount ?? bid.currentBid,
-            bid.status || 'Liderando'
+            bid.status || 'OUTBID'
         )
         bidsPanel.append(row)
     })
 }
 
-function renderPublications(auctions) {
+function renderPublications(auctions, bids = []) {
     publicationsPanel.innerHTML = ''
 
-    if (auctions.length === 0) {
+    const relevantBids = bids.filter((bid) => ['LEADING', 'WON'].includes(bid.status))
+    if (auctions.length === 0 && relevantBids.length === 0) {
         showEmptyActivity(publicationsPanel)
         return
     }
@@ -80,6 +88,15 @@ function renderPublications(auctions) {
             auction.title || 'Subasta sin título',
             relevantData,
             auction.status || 'Activa'
+        )
+        publicationsPanel.append(row)
+    })
+
+    relevantBids.forEach((bid) => {
+        const row = createActivityRow(
+            bid.auction?.title || 'Subasta sin título',
+            bid.amount,
+            bid.status
         )
         publicationsPanel.append(row)
     })
@@ -134,6 +151,7 @@ function normalizeStatus(status) {
         ACTIVE: 'Activa',
         UPCOMING: 'Próxima',
         FINISHED: 'Finalizada',
+        FINALIZED: 'Finalizada',
         DESIERTA: 'Desierta',
         LEADING: 'Liderando',
         WON: 'Ganada',
@@ -163,4 +181,12 @@ function formatCurrency(value) {
         currency: 'ARS',
         maximumFractionDigits: 2
     }).format(Number(value) || 0)
+}
+
+function getLoggedUser() {
+    try {
+        return JSON.parse(localStorage.getItem('subastaya_user')) || {}
+    } catch (error) {
+        return {}
+    }
 }

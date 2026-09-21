@@ -44,7 +44,7 @@ const getWalletTransactions=async(userId)=>{
     }
     const movement=await findLedgerByUserId(userId)
     return movement.map((movement)=>({
-        id:movement.id,tpye:movement.type,amount:Number(movement.amount),balanceAfter:Number(movement.balanceAfter),createdAt:movement.createdAt, auctionId:movement.relatedAuction?.id||null,bidId:movement.relatedBid?.id||null
+        id:movement.id,type:movement.type,amount:Number(movement.amount),balanceAfter:Number(movement.balanceAfter),createdAt:movement.createdAt, auctionId:movement.relatedAuction?.id||null,bidId:movement.relatedBid?.id||null
     }))
 }
 
