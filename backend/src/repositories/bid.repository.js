@@ -6,6 +6,8 @@ const LedgerEntry = require("../entities/LedgerEntry");
 const Bid = require("../entities/Bid");
 const {createAuditLog} = require('./audit.repository')
 const AuditLog = require("../entities/AuditLog");
+const { getAuctionById } = require("../services/auction.service");
+const { getIO } = require("../socket");
 
 const findAuctionById = async (auctionId) => {
   const auctionRepository = AppDataSource.getRepository(Auction);
@@ -29,7 +31,7 @@ const findWalletByUserId = async (userId) => {
 };
 
 const createBidWithEscrow = async ({ auctionId, userId, amount }) => {
-  return await AppDataSource.transaction(async (manager) => {
+  const result = await AppDataSource.transaction(async (manager) => {
     const auctionRepository = manager.getRepository(Auction);
     const walletRepository = manager.getRepository(Wallet);
     const bidRepository = manager.getRepository(Bid);
@@ -288,8 +290,20 @@ const createBidWithEscrow = async ({ auctionId, userId, amount }) => {
       );
     }
 
-    return savedBid;
+    return { savedBid, wasExtended };
   });
+
+  const auction = await getAuctionById(auctionId);
+  const io = getIO();
+
+  if (io) {
+    io.to(`auction-${auctionId}`).emit("auction-updated", {
+      ...auction,
+      wasExtended: result.wasExtended,
+    });
+  }
+
+  return result.savedBid;
 };
 
 module.exports = {

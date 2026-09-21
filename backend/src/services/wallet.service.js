@@ -1,5 +1,3 @@
-const AppDataSource = require('../config/database')
-const AuditLog = require('../entities/AuditLog')
 const {findWalletByUserId,depositToWallet,findLedgerByUserId}=require('../repositories/wallet.repository')
 
 const getWalletBalance=async(userId)=>{
@@ -9,15 +7,6 @@ const getWalletBalance=async(userId)=>{
         error.statusCode=404
         throw error
     }
-    const auditRepository = AppDataSource.getRepository(AuditLog)
-    await auditRepository.save(auditRepository.create({
-        eventType: 'MANUAL_BALANCE_CREDIT',
-        entityType: 'Wallet',
-        entityId: wallet.id,
-        user: wallet.user,
-        description: `Acreditación manual de saldo por ${numericAmount}.`,
-        metadata: { amount: numericAmount }
-    }))
     const totalBalance=Number(wallet.totalBalance)
     const heldBalance=Number(wallet.heldBalance)
     const availableBalance=totalBalance-heldBalance
