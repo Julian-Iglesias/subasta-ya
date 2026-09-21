@@ -1162,3 +1162,13 @@ input:focus {
     line-height: 1;
     transform: translateY(-0.1rem);
 }
+
+.stat-card:nth-child(2) strong,
+.activity-row .status.held,
+.data-table .held {
+    color: #b7791f;
+}
+
+.data-table .negative {
+    color: var(--accent-dark);
+}
