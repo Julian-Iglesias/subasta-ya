@@ -15,14 +15,14 @@ const listAuctions = async (filters) => {
     .leftJoinAndSelect("auction.seller", "seller")
     .leftJoinAndSelect("auction.currentWinner", "currentWinner");
 
-  if (filters.status)
-    queryBuilder.andWhere("auction.status = :status", {
-      status: filters.status,
-    });
-  if (filters.category_id)
-    queryBuilder.andWhere("category.id = :categoryId", {
-      categoryId: Number(filters.category_id),
-    });
+    if (filters.status === 'PAST') {
+        queryBuilder.andWhere('auction.status IN (:...statuses)', {
+            statuses: ['FINALIZED', 'DESERTED', 'FINISHED']
+        })
+    } else if (filters.status) {
+        queryBuilder.andWhere('auction.status = :status', { status: filters.status })
+    }
+    if (filters.category_id) queryBuilder.andWhere('category.id = :categoryId', { categoryId: Number(filters.category_id) })
 
   if (filters.sort === "bid_desc") {
     queryBuilder.orderBy("auction.current_bid", "DESC");

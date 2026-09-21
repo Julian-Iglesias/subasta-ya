@@ -2,28 +2,28 @@ const {
   findExpiredActiveAuctions,
   closeExpiredAuction,
   findUpcomingAuctionsToActivate,
-  activateAuction
-} = require('../repositories/auction.repository')
+  activateAuction,
+} = require("../repositories/auction.repository");
 
-
+const { getIO } = require("../socket");
 
 const activateUpcomingAuctions = async () => {
   const upcomingAuctions =
-    await findUpcomingAuctionsToActivate()
+    await findUpcomingAuctionsToActivate();
 
   for (const auction of upcomingAuctions) {
     try {
-      await activateAuction(auction.id)
+      await activateAuction(auction.id);
 
-      console.log(`Subasta ${auction.id} activada`)
+      console.log(`Subasta ${auction.id} activada`);
     } catch (error) {
       console.error(
         `Error activando subasta ${auction.id}:`,
         error.message
-      )
+      );
     }
   }
-}
+};
 
 
 const closeExpiredAuctions = async () => {
@@ -31,7 +31,14 @@ const closeExpiredAuctions = async () => {
 
   for (const auction of expiredAuctions) {
     try {
-      await closeExpiredAuction(auction.id);
+      const closedAuction = await closeExpiredAuction(auction.id);
+
+      const io = getIO();
+      if (io && ["FINALIZED", "DESERTED"].includes(closedAuction.status)) {
+        io.to(`auction-${auction.id}`).emit("auction-closed", {
+          status: closedAuction.status,
+        });
+      }
 
       console.log(`Subasta ${auction.id} cerrada`);
     } catch (error) {
