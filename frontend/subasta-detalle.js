@@ -46,6 +46,20 @@ function getLoggedUser() {
     }
 }
 
+function normalizeStatus(status) {
+    const normalizedStatus = String(status).toUpperCase()
+    const statusLabels = {
+        ACTIVE: 'Activa',
+        UPCOMING: 'Próxima',
+        FINISHED: 'Finalizada',
+        DESIERTA: 'Desierta',
+        LEADING: 'Liderando',
+        WON: 'Ganada',
+        OUTBID: 'Superado'
+    }
+    return statusLabels[normalizedStatus] || status
+}
+
 async function initializeAuctionDetail() {
     bidForm.addEventListener('submit', submitBid)
     await loadAuction()

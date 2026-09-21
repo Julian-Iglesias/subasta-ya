@@ -45,6 +45,45 @@ const listAuctions = async (filters) => {
     }))
 }
 
+const getAuctionById = async (id) => {
+    const auctionRepository = AppDataSource.getRepository(Auction)
+    const auction = await auctionRepository.findOne({
+        where: { id: Number(id) },
+        relations: { category: true, seller: true, currentWinner: true }
+    })
+
+    if (!auction) throw createNotFoundError('La subasta no existe.')
+
+    const bidRepository = AppDataSource.getRepository(Bid)
+    const bids = await bidRepository.find({
+        where: { auction: { id: auction.id } },
+        relations: { bidder: true },
+        order: { createdAt: 'DESC' }
+    })
+
+    return {
+        id: auction.id,
+        title: auction.title,
+        description: auction.description,
+        imageUrl: auction.imageUrl,
+        category: auction.category ? { id: auction.category.id, name: auction.category.name } : null,
+        basePrice: Number(auction.basePrice),
+        minimumIncrement: Number(auction.minimumIncrement),
+        startDate: auction.startDate,
+        endDate: auction.endDate,
+        status: auction.status,
+        currentBid: auction.currentBid === null ? null : Number(auction.currentBid),
+        bidCount: bids.length,
+        seller: auction.seller ? { id: auction.seller.id, name: auction.seller.name } : null,
+        currentWinner: auction.currentWinner ? { id: auction.currentWinner.id, name: auction.currentWinner.name } : null,
+        bids: bids.map((bid) => ({
+            amount: Number(bid.amount),
+            createdAt: bid.createdAt,
+            bidder: bid.bidder ? { name: bid.bidder.name } : null
+        }))
+    }
+}
+
 const publishAuction = async (data) => {
     const title = String(data.title || '').trim()
     const description = String(data.description || '').trim()
@@ -121,4 +160,4 @@ function createNotFoundError(message) {
     return error
 }
 
-module.exports = { publishAuction, listAuctions }
+module.exports = { publishAuction, listAuctions, getAuctionById }
