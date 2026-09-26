@@ -1,20 +1,41 @@
-require('dotenv').config()
-const app = require('./app')
-const AppDataSource=require('./config/database')
-const { closeExpiredAuctions } = require('./workers/auction-closer.worker')
+require("dotenv").config();
+const http = require("http");
+const { Server } = require("socket.io");
+const app = require("./app");
+const AppDataSource = require("./config/database");
 
-const PORT = process.env.PORT || 3000
+const {
+  closeExpiredAuctions,
+  activateUpcomingAuctions,
+} = require("./services/auctionClosing.service");
+
+const { init } = require("./socket");
 
 
-AppDataSource.initialize().then(()=>{
-    console.log('Base de datos conectada')
-    
-    app.listen(PORT,()=> {
-        console.log(`Servidor corriendo en http://localhost:${PORT}`)
-        setInterval(() => {
-            closeExpiredAuctions().catch((error) => {
-                console.error('Error en el worker de cierre de subastas', error)
-            })
-        }, 30000)
-    })
-}).catch((error)=>{console.error('Error al conectar la BD: ',error)})
+const PORT = process.env.PORT || 3000;
+const httpServer = http.createServer(app);
+const io = new Server(httpServer, { cors: { origin: "*" } });
+init(io);
+
+AppDataSource.initialize()
+  .then(() => {
+    console.log("Base de datos conectada");
+
+    httpServer.listen(PORT, () => {
+      console.log(`Servidor corriendo en http://localhost:${PORT}`);
+      setInterval(async () => {
+        try {
+          await activateUpcomingAuctions();
+          await closeExpiredAuctions();
+        } catch (error) {
+          console.error(
+            "Error actualizando estados de subastas:",
+            error.message,
+          );
+        }
+      }, 30000);
+    });
+  })
+  .catch((error) => {
+    console.error("Error al conectar la BD: ", error);
+  });

@@ -85,12 +85,17 @@ function renderMovements(movements) {
     movements.forEach((movement) => {
         const row = document.createElement('tr')
         const amount = Number(movement.amount) || 0
-        const amountClass = amount >= 0 ? 'positive' : 'negative'
+        const movementType = String(movement.type || movement.tpye || '').toUpperCase()
+        const amountClass = movementType === 'HOLD'
+            ? 'held'
+            : ['RELEASE', 'FINAL_DEBIT', 'DEBIT', 'WITHDRAWAL'].includes(movementType) || amount < 0
+                ? 'negative'
+                : 'positive'
         const formattedAmount = `${amount >= 0 ? '+' : ''}${formatCurrency(amount)}`
 
         row.innerHTML = `
             <td>${escapeHtml(formatDate(movement.createdAt || movement.created_at || movement.date))}</td>
-            <td>${escapeHtml(movement.concept || movement.tpye || 'Movimiento')}</td>
+            <td>${escapeHtml(movement.concept || movement.type || movement.tpye || 'Movimiento')}</td>
             <td>${escapeHtml(movement.status || 'Completado')}</td>
             <td class="${amountClass}">${formattedAmount}</td>
         `

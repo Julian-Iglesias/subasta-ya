@@ -86,7 +86,7 @@ function renderCategoryFilters(categories) {
     categoryFilters.append(allChip)
 
     categories.forEach((category) => {
-        categoryFilters.append(createFilterChip(category.name, category.id))
+        categoryFilters.append(createFilterChip(normalizeCategoryName(category.name), category.id))
     })
 }
 
@@ -157,7 +157,7 @@ function createAuctionCard(auction) {
 
     const category = document.createElement('p')
     category.className = 'auction-category'
-    category.textContent = auction.category?.name || 'Sin categoría'
+    category.textContent = normalizeCategoryName(auction.category?.name) || 'Sin categoría'
 
     const title = document.createElement('h2')
     title.textContent = auction.title || 'Subasta sin título'
@@ -233,9 +233,18 @@ function renderAuctionCategoryOptions(categories) {
     categories.forEach((category) => {
         const option = document.createElement('option')
         option.value = category.id
-        option.textContent = category.name
+        option.textContent = normalizeCategoryName(category.name)
         auctionCategorySelect.append(option)
     })
+}
+
+function normalizeCategoryName(name) {
+    const categoryName = String(name || '')
+    return categoryName
+        .replace('TecnologÝa', 'Tecnología')
+        .replace('VehÝculos', 'Vehículos')
+        .replace('TecnologÃ­a', 'Tecnología')
+        .replace('VehÃ­culos', 'Vehículos')
 }
 
 function openAuctionModal() {
