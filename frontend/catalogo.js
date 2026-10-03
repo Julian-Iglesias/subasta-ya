@@ -11,6 +11,8 @@ const auctionGrid = document.querySelector('#auction-grid')
 const catalogMessage = document.querySelector('#catalog-message')
 const categoryFilters = document.querySelector('#category-filters')
 const statusFilters = document.querySelector('#status-filters')
+const minPriceInput = document.querySelector('#min-price')
+const maxPriceInput = document.querySelector('#max-price')
 const sortSelect = document.querySelector('#sort-select')
 const openAuctionModalButton = document.querySelector('#open-auction-modal')
 const auctionModal = document.querySelector('#auction-modal')
@@ -25,6 +27,8 @@ const loggedUser = getLoggedUser()
 const filters = {
     status: '',
     categoryId: '',
+    minPrice: '',
+    maxPrice: '',
     sort: sortSelect.value
 }
 
@@ -54,6 +58,16 @@ function bindFilterEvents() {
 
     sortSelect.addEventListener('change', () => {
         filters.sort = sortSelect.value
+        loadAuctions()
+    })
+
+    minPriceInput.addEventListener('change', () => {
+        filters.minPrice = minPriceInput.value
+        loadAuctions()
+    })
+
+    maxPriceInput.addEventListener('change', () => {
+        filters.maxPrice = maxPriceInput.value
         loadAuctions()
     })
 
@@ -113,6 +127,9 @@ async function loadAuctions() {
     if (filters.status) params.set('status', filters.status)
     if (filters.categoryId) params.set('category_id', filters.categoryId)
     if (filters.sort) params.set('sort', filters.sort)
+    if (filters.minPrice) params.set('min_price', filters.minPrice)
+    if (filters.maxPrice) params.set('max_price', filters.maxPrice)
+
 
     try {
         const response = await fetch(`${API_URL}/auctions?${params.toString()}`)
