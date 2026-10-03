@@ -152,6 +152,7 @@ function normalizeStatus(status) {
         UPCOMING: 'Próxima',
         FINISHED: 'Finalizada',
         FINALIZED: 'Finalizada',
+        DESERTED: 'Desierta',
         DESIERTA: 'Desierta',
         LEADING: 'Liderando',
         WON: 'Ganada',
