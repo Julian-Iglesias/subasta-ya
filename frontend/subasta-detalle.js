@@ -75,6 +75,7 @@ function normalizeStatus(status) {
         UPCOMING: 'Próxima',
         FINISHED: 'Finalizada',
         FINALIZED: 'Finalizada',
+        DESERTED: 'Desierta',
         DESIERTA: 'Desierta',
         LEADING: 'Liderando',
         WON: 'Ganada',
@@ -112,7 +113,7 @@ function renderAuction(auction) {
     const actualCurrentBid = auction.currentBid ?? auction.current_bid
     const basePrice = auction.basePrice ?? auction.base_price
     const increment = auction.minimumIncrement ?? auction.minimum_increment
-    const nextBid = Number(actualCurrentBid ?? basePrice) + Number(increment || 0)
+    const nextBid = actualCurrentBid !== null && actualCurrentBid !== undefined ? Number(actualCurrentBid) + Number(increment || 0) : Number(basePrice)
 
     auctionCategory.textContent = `${category} · ${status}`
     auctionTitle.textContent = auction.title || 'Subasta sin título'
@@ -220,10 +221,10 @@ async function submitBid(event) {
     bidFeedback.textContent = ''
     bidFeedback.className = 'feedback'
 
-    if (!Number.isFinite(amount) || amount <= nextBid) {
-        bidFeedback.textContent = `La oferta debe ser mayor a ${formatCurrency(nextBid)}.`
-        bidFeedback.className = 'feedback error'
-        return
+    if (!Number.isFinite(amount) || amount < nextBid) {
+      bidFeedback.textContent = `La oferta mínima permitida es ${formatCurrency(nextBid)}.`;
+      bidFeedback.className = "feedback error";
+      return;
     }
 
     submitBidButton.disabled = true
@@ -255,11 +256,19 @@ async function submitBid(event) {
 }
 
 function getSuggestedBid() {
-    if (!currentAuction) return 0
-    const actualCurrentBid = currentAuction.currentBid ?? currentAuction.current_bid
-    const basePrice = currentAuction.basePrice ?? currentAuction.base_price
-    const increment = currentAuction.minimumIncrement ?? currentAuction.minimum_increment
-    return Number(actualCurrentBid ?? basePrice) + Number(increment || 0)
+  if (!currentAuction) return 0;
+
+  const actualCurrentBid =
+    currentAuction.currentBid ?? currentAuction.current_bid;
+
+  const basePrice = currentAuction.basePrice ?? currentAuction.base_price;
+
+  const increment =
+    currentAuction.minimumIncrement ?? currentAuction.minimum_increment;
+
+  return actualCurrentBid !== null && actualCurrentBid !== undefined
+    ? Number(actualCurrentBid) + Number(increment || 0)
+    : Number(basePrice);
 }
 
 function createBidError(status, message) {
