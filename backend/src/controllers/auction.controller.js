@@ -24,7 +24,13 @@ const getAuctionById = async (req, res) => {
 
 const createAuction = async (req, res) => {
     try {
-        const auction = await publishAuction(req.body)
+        const data = {
+            ...req.body,
+            sellerId: req.user.id
+        }
+
+        const auction = await publishAuction(data)
+
         return res.status(201).json(auction)
     } catch (error) {
         return res.status(error.statusCode || 500).json({

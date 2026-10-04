@@ -9,20 +9,29 @@ const createUser=async(req,res)=>{
         })
     }
 }
-
 const getAuctionsByUser = async (req, res) => {
     try {
-        return res.status(200).json(await getUserAuctions(req.params.userId))
+        const userId = req.user.id
+        return res.status(200).json(
+            await getUserAuctions(userId)
+        )
     } catch (error) {
-        return res.status(error.statusCode || 500).json({ message: error.message || 'No se pudieron cargar tus publicaciones.' })
+        return res.status(error.statusCode || 500).json({
+            message: error.message || 'No se pudieron cargar tus publicaciones.'
+        })
     }
 }
 
 const getBidsByUser = async (req, res) => {
     try {
-        return res.status(200).json(await getUserBids(req.params.userId))
+        const userId = req.user.id
+        return res.status(200).json(
+            await getUserBids(userId)
+        )
     } catch (error) {
-        return res.status(error.statusCode || 500).json({ message: error.message || 'No se pudieron cargar tus pujas.' })
+        return res.status(error.statusCode || 500).json({
+            message: error.message || 'No se pudieron cargar tus pujas.'
+        })
     }
 }
 
