@@ -76,6 +76,11 @@ form.addEventListener('submit', async (event) => {
         } else {
             localStorage.setItem('subastaya_user', JSON.stringify(result.user))
             window.location.href = 'catalogo.html'
+            localStorage.setItem(
+                'subastaya_token',
+                result.token
+            )
+            window.location.href = 'catalogo.html'
             return
         }
     } catch (error) {

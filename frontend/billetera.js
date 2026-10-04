@@ -16,6 +16,7 @@ const submitDepositButton = document.querySelector('#submit-deposit')
 const depositFeedback = document.querySelector('#deposit-feedback')
 
 const loggedUser = getLoggedUser()
+const authToken = localStorage.getItem('subastaya_token')
 
 if (!loggedUser || !loggedUser.id) {
     window.location.replace('index.html')
@@ -47,7 +48,11 @@ function bindWalletEvents() {
 
 async function loadBalance() {
     try {
-        const response = await fetch(`${API_URL}/wallets/${encodeURIComponent(loggedUser.id)}`)
+        const response = await fetch(`${API_URL}/wallets`, {
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        })
         const result = await parseApiResponse(response, 'No se pudo cargar el saldo.')
         const balance = result.balance || result.data || result
 
@@ -64,7 +69,11 @@ async function loadBalance() {
 
 async function loadMovements() {
     try {
-        const response = await fetch(`${API_URL}/wallets/${encodeURIComponent(loggedUser.id)}/transactions`)
+        const response = await fetch(`${API_URL}/wallets/transactions`, {
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        })
         const result = await parseApiResponse(response, 'No se pudieron cargar los movimientos.')
         const movements = Array.isArray(result) ? result : result.movements || result.data || []
         renderMovements(movements)
@@ -145,10 +154,15 @@ async function submitDeposit(event) {
     depositFeedback.className = 'feedback'
 
     try {
-        const response = await fetch(`${API_URL}/wallets/${encodeURIComponent(loggedUser.id)}/deposits`, {
+        const response = await fetch(`${API_URL}/wallets/deposits`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ amount: Number(depositAmount.value) })
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({
+                amount: Number(depositAmount.value)
+            })
         })
         const result = await parseApiResponse(response, 'No se pudo cargar el saldo.')
 
@@ -187,6 +201,7 @@ async function parseApiResponse(response, fallbackMessage) {
 }
 
 function getApiErrorMessage(error, fallbackMessage) {
+    if (error.status === 401) return 'Tu sesión expiró. Volvé a iniciar sesión.'
     if (error.status === 404) return 'Esta función todavía no está disponible en el backend.'
     return error.message || fallbackMessage
 }
