@@ -3,6 +3,7 @@ const API_URL = 'http://localhost:3000/api'
 const activityTabs = document.querySelectorAll('[data-activity-tab]')
 const bidsPanel = document.querySelector('#bids-panel')
 const publicationsPanel = document.querySelector('#publications-panel')
+const authToken = localStorage.getItem('subastaya_token')
 const loggedUser = getLoggedUser()
 
 initializeActivities()
@@ -28,7 +29,11 @@ function bindActivityTabs() {
 
 async function loadBids() {
     try {
-        const response = await fetch(`${API_URL}/users/${encodeURIComponent(loggedUser.id)}/bids`)
+        const response = await fetch(`${API_URL}/users/me/bids`, {
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        })
         const result = await parseApiResponse(response, 'No se pudieron cargar tus pujas.')
         const bids = Array.isArray(result) ? result : result.bids || result.data || []
         renderBids(bids)
@@ -39,10 +44,17 @@ async function loadBids() {
 
 async function loadPublications() {
     try {
-        const userPath = `${API_URL}/users/${encodeURIComponent(loggedUser.id)}`
         const [auctionsResponse, bidsResponse] = await Promise.all([
-            fetch(`${userPath}/auctions`),
-            fetch(`${userPath}/bids`)
+            fetch(`${API_URL}/users/me/auctions`, {
+                headers: {
+                    'Authorization': `Bearer ${authToken}`
+                }
+            }),
+            fetch(`${API_URL}/users/me/bids`, {
+                headers: {
+                    'Authorization': `Bearer ${authToken}`
+                }
+            })
         ])
         const auctionsResult = await parseApiResponse(auctionsResponse, 'No se pudieron cargar tus publicaciones.')
         const bidsResult = await parseApiResponse(bidsResponse, 'No se pudieron cargar tus pujas.')
@@ -172,6 +184,9 @@ async function parseApiResponse(response, fallbackMessage) {
 }
 
 function getApiErrorMessage(error, fallbackMessage) {
+    if (error.status === 401) {
+        return 'Tu sesión expiró. Volvé a iniciar sesión.'
+    }
     if (error.status === 404) return 'Todavía no disponible.'
     return error.message || fallbackMessage
 }

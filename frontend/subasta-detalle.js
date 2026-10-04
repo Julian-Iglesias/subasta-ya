@@ -4,6 +4,7 @@ const PLACEHOLDER_IMAGE = 'https://placehold.co/800x500/e6e8df/68756e?text=Subas
 const auctionId = new URLSearchParams(window.location.search).get('id')
 const socket = io('http://localhost:3000')
 const loggedUser = getLoggedUser()
+const authToken = localStorage.getItem('subastaya_token')
 const detailContent = document.querySelector('#detail-content')
 const detailError = document.querySelector('#detail-error')
 const auctionCategory = document.querySelector('#auction-category')
@@ -232,12 +233,14 @@ async function submitBid(event) {
 
     try {
         const response = await fetch(`${API_URL}/auctions/${encodeURIComponent(auctionId)}/bids`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: loggedUser.id, amount })
-        })
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
+    },
+    body: JSON.stringify({ amount })
+})
         const result = await response.json().catch(() => ({}))
-
         if (!response.ok) {
             throw createBidError(response.status, result.message)
         }
@@ -272,6 +275,7 @@ function getSuggestedBid() {
 }
 
 function createBidError(status, message) {
+    if (status === 401) return new Error('Tu sesión expiró. Volvé a iniciar sesión.')
     if (status === 409) return new Error(message || 'Alguien ofertó justo antes que vos, probá con un monto mayor')
     if (status === 422) return new Error('Saldo insuficiente para esta oferta')
     if (status === 400) return new Error(message || 'La oferta no es válida. Revisá el monto y el estado de la subasta.')

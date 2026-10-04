@@ -20,6 +20,7 @@ const auctionForm = document.querySelector('#auction-form')
 const auctionCategorySelect = document.querySelector('#auction-category')
 const submitAuctionButton = document.querySelector('#submit-auction')
 const auctionFeedback = document.querySelector('#auction-feedback')
+const authToken = localStorage.getItem('subastaya_token')
 const loggedUser = getLoggedUser()
 
 const filters = {
@@ -334,7 +335,6 @@ async function submitAuction(event) {
     auctionFeedback.className = 'feedback'
 
     const payload = {
-        sellerId: loggedUser?.id,
         title: data.title.trim(),
         description: data.description.trim(),
         imageUrl: data.imageUrl.trim() || null,
@@ -348,7 +348,10 @@ async function submitAuction(event) {
     try {
         const response = await fetch(`${API_URL}/auctions`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
             body: JSON.stringify(payload)
         })
 
