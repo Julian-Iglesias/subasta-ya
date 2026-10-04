@@ -3,7 +3,8 @@ const { placeBid } = require('../services/bid.service')
 const createBid = async (req, res) => {
     try {
         const auctionId = req.params.auctionId
-        const { userId, amount } = req.body
+        const userId = req.user.id
+        const { amount } = req.body
 
         const result = await placeBid({
             auctionId,

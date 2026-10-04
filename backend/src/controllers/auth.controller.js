@@ -1,16 +1,19 @@
-const{loginUser}= require('../services/auth.service')
+const { loginUser } = require('../services/auth.service')
 
-const login = async(req,res)=>{
-    try{
-        const user = await loginUser(req.body)
+const login = async (req, res) => {
+    try {
+        const result = await loginUser(req.body)
+
         return res.status(200).json({
-            message:'login correcto',user
+            message: 'login correcto',
+            user: result.user,
+            token: result.token
         })
-    }catch (error){
-        return res.status(error.statusCode||500).json({
-            message:error.message||'No se pudo iniciar sesion'
+    } catch (error) {
+        return res.status(error.statusCode || 500).json({
+            message: error.message || 'No se pudo iniciar sesion'
         })
     }
 }
 
-module.exports={login}
+module.exports = { login }
