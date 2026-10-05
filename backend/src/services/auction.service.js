@@ -15,14 +15,52 @@ const listAuctions = async (filters) => {
     .leftJoinAndSelect("auction.seller", "seller")
     .leftJoinAndSelect("auction.currentWinner", "currentWinner");
 
-    if (filters.status === 'PAST') {
-        queryBuilder.andWhere('auction.status IN (:...statuses)', {
-            statuses: ['FINALIZED', 'DESERTED', 'FINISHED']
-        })
-    } else if (filters.status) {
-        queryBuilder.andWhere('auction.status = :status', { status: filters.status })
-    }
-    if (filters.category_id) queryBuilder.andWhere('category.id = :categoryId', { categoryId: Number(filters.category_id) })
+  if (filters.status === 'PAST') {
+    queryBuilder.andWhere('auction.status IN (:...statuses)', {
+      statuses: ['FINALIZED', 'DESERTED', 'FINISHED']
+    })
+  } else if (filters.status) {
+    queryBuilder.andWhere('auction.status = :status', { status: filters.status })
+  }
+  if (filters.category_id) queryBuilder.andWhere('category.id = :categoryId', { categoryId: Number(filters.category_id) })
+
+  const minPrice =
+    filters.min_price !== undefined && filters.min_price !== ""
+      ? Number(filters.min_price)
+      : null;
+
+  const maxPrice =
+    filters.max_price !== undefined && filters.max_price !== ""
+      ? Number(filters.max_price)
+      : null;
+
+  if (minPrice !== null && (!Number.isFinite(minPrice) || minPrice < 0)) {
+    throw createValidationError("El precio mínimo no es válido.");
+  }
+
+  if (maxPrice !== null && (!Number.isFinite(maxPrice) || maxPrice < 0)) {
+    throw createValidationError("El precio máximo no es válido.");
+  }
+
+  if (minPrice !== null && maxPrice !== null && minPrice > maxPrice) {
+    throw createValidationError(
+      "El precio mínimo no puede ser mayor al precio máximo."
+    );
+  }
+
+  if (minPrice !== null) {
+    queryBuilder.andWhere(
+      "COALESCE(auction.current_bid, auction.base_price) >= :minPrice",
+      { minPrice }
+    );
+  }
+
+  if (maxPrice !== null) {
+    queryBuilder.andWhere(
+      "COALESCE(auction.current_bid, auction.base_price) <= :maxPrice",
+      { maxPrice }
+    );
+  }
 
   if (filters.sort === "bid_desc") {
     queryBuilder.orderBy("auction.current_bid", "DESC");
