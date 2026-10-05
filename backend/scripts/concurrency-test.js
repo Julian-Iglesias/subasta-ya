@@ -1,43 +1,53 @@
-const token = process.env.TEST_TOKEN
+require('dotenv').config()
 
-const bidA = {
-  url: 'http://localhost:3000/api/auctions/154/bids',
-  amount: 80000
+const auctionId = process.env.TEST_AUCTION_ID
+const tokenUser1 = process.env.TEST_TOKEN_USER_1
+const tokenUser2 = process.env.TEST_TOKEN_USER_2
+const amount = Number(process.env.TEST_BID_AMOUNT || 60000)
+
+if (!auctionId || !tokenUser1 || !tokenUser2) {
+  console.error(
+    'Faltan TEST_AUCTION_ID, TEST_TOKEN_USER_1 o TEST_TOKEN_USER_2 en el .env'
+  )
+  process.exit(1)
 }
 
-const bidB = {
-  url: 'http://localhost:3000/api/auctions/155/bids',
-  amount: 80000
-}
+const url = `http://localhost:3000/api/auctions/${auctionId}/bids`
 
-const sendBid = async ({ url, amount }) => {
+async function makeBid(token, userLabel) {
   const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      Authorization: `Bearer ${token}`
     },
-    body: JSON.stringify({ amount })
+    body: JSON.stringify({
+      amount
+    })
   })
 
-  const body = await response.json().catch(() => ({}))
+  const data = await response.json()
 
   return {
+    usuario: userLabel,
     status: response.status,
-    body
+    respuesta: data
   }
 }
 
-const runTest = async () => {
-  console.log('Prueba de concurrencia de billetera')
-  console.log('Mismo usuario, dos subastas, dos pujas simultáneas')
+async function runTest() {
+  console.log(`Subasta: ${auctionId}`)
+  console.log(`Monto simultáneo: ${amount}`)
+  console.log('Ejecutando dos pujas al mismo tiempo...\n')
 
   const results = await Promise.all([
-    sendBid(bidA),
-    sendBid(bidB)
+    makeBid(tokenUser1, 'Usuario 1'),
+    makeBid(tokenUser2, 'Usuario 2')
   ])
 
   console.log(results)
 }
 
-runTest()
+runTest().catch(error => {
+  console.error('Error ejecutando la prueba:', error)
+})

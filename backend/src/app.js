@@ -9,11 +9,15 @@ const walletRoutes=require('./routes/wallet.routes')
 const bidRoutes = require('./routes/bid.routes')
 const auctionRoutes = require('./routes/auction.routes')
 const categoryRoutes = require('./routes/category.routes')
+const swaggerUi = require('swagger-ui-express')
+const swaggerSpec = require('./config/swagger')
 
 const app = express()
 
 app.use(express.json())
 app.use(express.static(path.join(__dirname, '../../frontend')))
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
+
 
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*')
