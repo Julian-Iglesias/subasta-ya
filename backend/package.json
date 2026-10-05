@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
-    "typeorm": "typeorm-ts-node-commonjs",
+    "typeorm": "typeorm",
     "seed": "node src/seeds/seed.js"
   },
   "keywords": [],
@@ -20,6 +20,8 @@
     "mysql2": "^3.24.3",
     "reflect-metadata": "^0.2.2",
     "socket.io": "^4.8.3",
+    "swagger-jsdoc": "^6.3.0",
+    "swagger-ui-express": "^5.0.1",
     "typeorm": "^1.1.1"
   },
   "devDependencies": {

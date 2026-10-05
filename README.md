@@ -125,7 +125,7 @@ Si se realiza una puja válida durante los últimos 60 segundos, la subasta se e
 
 El sistema utiliza optimistic locking mediante un campo version en entidades críticas como Auction y Wallet.
 
-### Prueba de concurrencia requerida
+### Prueba de concurrencia
 
 Se prueba el caso en el que dos usuarios distintos realizan una puja al mismo tiempo sobre la misma subasta.
 
@@ -141,6 +141,11 @@ Usuario B → 409 Conflict
 Solo una de las dos pujas debe quedar registrada.
 
 La otra se rechaza con 409 Conflict porque la subasta ya fue modificada por otra operación concurrente.
+
+La prueba se ejecuta con:
+```bash
+node scripts/concurrency-test.js
+```
 
 ## Auditoría
 

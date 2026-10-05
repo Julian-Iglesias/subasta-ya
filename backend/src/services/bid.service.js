@@ -81,22 +81,61 @@ const validateBid=async ({auctionId,userId,amount})=>{
 
 const placeBid = async ({ auctionId, userId, amount }) => {
   try {
-    const validation = await validateBid({auctionId,userId,amount,})
-    const savedBid = await createBidWithEscrow({auctionId,userId,amount: validation.amount,})
+    const validation = await validateBid({
+      auctionId,
+      userId,
+      amount,
+    })
+
+    const savedBid = await createBidWithEscrow({
+      auctionId,
+      userId,
+      amount: validation.amount,
+    })
 
     return {
       message: "Puja realizada correctamente",
-      bid: {id: savedBid.id,amount: Number(savedBid.amount),createdAt: savedBid.createdAt,}}
+      bid: {
+        id: savedBid.id,
+        amount: Number(savedBid.amount),
+        createdAt: savedBid.createdAt,
+      }
+    }
+
   } catch (error) {
+
+    // Si MySQL detecta un deadlock, lo convertimos en 409 Conflict
+    if (
+      error.code === 'ER_LOCK_DEADLOCK' ||
+      error.errno === 1213 ||
+      error.message?.includes('Deadlock found')
+    ) {
+      error.statusCode = 409
+      error.message = 'Conflicto de concurrencia al procesar la puja'
+    }
+
     try {
       await createAuditLogStandalone({
-        eventType: "BID_REJECTED",entityType: "AUCTION",entityId: Number(auctionId),description: "Puja rechazada",
-        metadata: {amount: amount,reason: error.message,statusCode: error.statusCode || 500,},userId: userId,});
+        eventType: "BID_REJECTED",
+        entityType: "AUCTION",
+        entityId: Number(auctionId),
+        description: "Puja rechazada",
+        metadata: {
+          amount: amount,
+          reason: error.message,
+          statusCode: error.statusCode || 500,
+        },
+        userId: userId,
+      })
     } catch (auditError) {
-      console.error("No se pudo registrar la auditoría:", auditError.message);
+      console.error(
+        "No se pudo registrar la auditoría:",
+        auditError.message
+      )
     }
-    throw error;
+
+    throw error
   }
-};
+}
 
 module.exports={validateBid, placeBid}
