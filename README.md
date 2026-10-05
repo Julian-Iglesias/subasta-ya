@@ -1,46 +1,191 @@
 # SubastaYa
 
-Plataforma web de subastas en tiempo real con billetera virtual, escrow, anti-sniping y gestión transaccional segura.
+Plataforma web de subastas en tiempo real con billetera virtual, escrow, anti-sniping, autenticación JWT y control de concurrencia.
+
+## Tecnologías
+
+### Backend
+- Node.js
+- Express
+- TypeORM
+- MySQL
+- bcryptjs
+- JWT
+- Socket.io
+- dotenv
+
+### Frontend
+- HTML
+- CSS
+- JavaScript
 
 ## Estructura
 
-- `backend/`: API REST (Node.js + Express + TypeORM), lógica de negocio, WebSockets y worker de cierre de subastas.
-- `frontend/`: interfaz web (HTML/CSS/JS vanilla), servida como estática desde el propio backend.
-
-## Instalación rápida
-
+```text
+subasta-ya/
+├── backend/
+│   ├── scripts/
+│   ├── src/
+│   │   ├── config/
+│   │   ├── controllers/
+│   │   ├── entities/
+│   │   ├── middlewares/
+│   │   ├── migrations/
+│   │   ├── repositories/
+│   │   ├── routes/
+│   │   ├── seeds/
+│   │   └── services/
+│   └── package.json
+├── frontend/
+└── README.md
 ```
+
+## Instalación
+
 git clone https://github.com/Julian-Iglesias/subasta-ya.git
 cd subasta-ya/backend
 npm install
-```
-Crear `.env` (a partir de `.env.example`) con los datos de tu MySQL local, crear la base `subastaya` vacía, y luego:
-```
+
+### Crear una base MySQL llamada:
+
+subastaya
+
+### Crear .env tomando como referencia .env.example:
+
+PORT=3000
+
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=
+DB_NAME=subastaya
+
+JWT_SECRET=
+JWT_EXPIRES_IN=1h
+
+### Ejecutar migraciones:
+```bash
 npx typeorm migration:run -d src/config/database.js
-node src/scripts/seed.js
-npm start
 ```
-La app queda en `http://localhost:3000`.
+
+### Cargar datos iniciales:
+```bash
+npm run seed
+```
+
+### La aplicación queda disponible en:
+
+http://localhost:3000
 
 ## Funcionalidades
 
-- **Catálogo**: exploración de subastas con filtros por estado, categoría y ordenamiento.
-- **Publicación de subastas**: formulario de alta con validaciones de fechas y montos.
-- **Sala de subasta en vivo**: temporizador, historial de ofertas y consola de puja, sincronizados en tiempo real vía **WebSockets (Socket.io)**.
-- **Billetera virtual**: saldo total, retenido y disponible, carga de saldo simulada e historial de movimientos.
-- **Mis actividades**: pujas/compras realizadas y publicaciones propias.
+- Registro e inicio de sesión.
+- Autenticación mediante JWT.
+- Catálogo de subastas.
+- Filtros por estado, categoría y rango de precio.
+- Creación de subastas.
+- Sala de subasta en tiempo real.
+- Historial de pujas.
+- Billetera virtual.
+- Saldo total, retenido y disponible.
+- Historial de movimientos.
+- Actividades del usuario.
+- Actualizaciones en tiempo real con Socket.io.
 
-## Reglas de negocio
+## Estados de subasta
 
-- **Escrow**: al pujar, el monto queda retenido; si otro usuario supera la oferta, se libera automáticamente el saldo del postor anterior.
-- **Anti-sniping**: una puja dentro de los últimos 60 segundos extiende la subasta 2 minutos.
-- **Optimistic locking**: `Wallet` y `Auction` usan un campo `version`; una actualización concurrente desactualizada se rechaza con `409 Conflict` en vez de sobrescribir datos.
-- **Worker de cierre**: cada 30 segundos liquida subastas vencidas con ganador (transfiere el saldo del comprador al vendedor) o las marca `DESIERTA` si no tuvieron ofertas.
-- **AuditLog**: registra pujas, rechazos por concurrencia, extensiones por anti-sniping, cambios de estado y acreditaciones manuales de saldo.
+UPCOMING
+ACTIVE
+FINALIZED
+DESERTED
 
-## Prueba de concurrencia
+Las subastas pasan automáticamente de UPCOMING a ACTIVE.
 
-`backend/scripts/concurrency-test.js` envía dos pujas simultáneas a la misma subasta para comprobar que solo una se acepta (`201`) y la otra se rechaza por conflicto de versión (`409`):
+### Al finalizar:
+
+con ganador > FINALIZED
+sin ofertas > DESERTED
+
+## Escrow
+
+Cuando un usuario realiza la oferta líder, el dinero queda retenido.
+
+Ejemplo:
+Saldo total: $100.000
+Saldo retenido: $80.000
+Saldo disponible: $20.000
+
+Si otro usuario supera la oferta, el saldo retenido del postor anterior se libera automáticamente.
+
+## Anti-sniping
+
+Si se realiza una puja válida durante los últimos 60 segundos, la subasta se extiende 2 minutos.
+
+## Concurrencia
+
+El sistema utiliza optimistic locking mediante un campo version en entidades críticas como Auction y Wallet.
+
+### Prueba de concurrencia requerida
+
+Se prueba el caso en el que dos usuarios distintos realizan una puja al mismo tiempo sobre la misma subasta.
+
+El objetivo es evitar que ambas pujas se guarden cuando parten de la misma versión de la subasta.
+
+Resultado esperado:
+
+```text
+Usuario A → 201 Created
+Usuario B → 409 Conflict
 ```
-node backend/scripts/concurrency-test.js
-```
+
+Solo una de las dos pujas debe quedar registrada.
+
+La otra se rechaza con 409 Conflict porque la subasta ya fue modificada por otra operación concurrente.
+
+## Auditoría
+
+Las operaciones críticas quedan registradas en AuditLog.
+
+Ejemplos:
+BID_PLACED
+BID_REJECTED
+BID_REJECTED_CONCURRENCY
+ANTI_SNIPING_EXTENDED
+AUCTION_ACTIVATED
+AUCTION_FINALIZED
+AUCTION_DESERTED
+WALLET_DEPOSIT
+
+## Principales endpoints
+
+### Autenticación
+POST /api/auth/login
+GET /api/auth/me
+
+### Subastas
+GET /api/auctions
+GET /api/auctions/:id
+POST /api/auctions
+
+### Pujas
+POST /api/auctions/:auctionId/bids
+
+### Billetera
+GET /api/wallets
+POST /api/wallets/deposits
+GET /api/wallets/transactions
+
+### Actividades
+GET /api/users/me/auctions
+GET /api/users/me/bids
+
+## Seguridad
+
+El sistema utiliza:
+- bcrypt para contraseñas.
+- JWT para autenticación.
+- Middleware para rutas protegidas.
+- Transacciones ACID.
+- Optimistic locking.
+- Validaciones de saldo y reglas de negocio.
+- Auditoría de operaciones críticas.

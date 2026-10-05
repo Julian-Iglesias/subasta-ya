@@ -4,7 +4,7 @@ const AppDataSource = require("../config/database");
 const Wallet = require("../entities/Wallet");
 const LedgerEntry = require("../entities/LedgerEntry");
 const Bid = require("../entities/Bid");
-const {createAuditLog} = require('./audit.repository')
+const { createAuditLog } = require("./audit.repository");
 const AuditLog = require("../entities/AuditLog");
 const { getAuctionById } = require("../services/auction.service");
 const { getIO } = require("../socket");
@@ -83,10 +83,9 @@ const createBidWithEscrow = async ({ auctionId, userId, amount }) => {
       throw error;
     }
 
-
     const millisecondsRemaining =
       new Date(auction.endDate).getTime() - now.getTime();
-    const oldEndDate = new Date(auction.endDate)
+    const oldEndDate = new Date(auction.endDate);
     let newEndDate = new Date(auction.endDate);
     let wasExtended = false;
 
@@ -97,7 +96,6 @@ const createBidWithEscrow = async ({ auctionId, userId, amount }) => {
 
       wasExtended = true;
     }
-
 
     const wallet = await walletRepository.findOne({
       where: {
@@ -164,10 +162,36 @@ const createBidWithEscrow = async ({ auctionId, userId, amount }) => {
         throw error;
       }
 
-      previousWinnerWallet.heldBalance =
+      const expectedPreviousWalletVersion = previousWinnerWallet.version;
+
+      const newPreviousHeldBalance =
         Number(previousWinnerWallet.heldBalance) - previousBid;
 
-      await walletRepository.save(previousWinnerWallet);
+      const previousWalletUpdateResult = await walletRepository
+        .createQueryBuilder()
+        .update(Wallet)
+        .set({
+          heldBalance: newPreviousHeldBalance,
+          version: () => "version + 1",
+        })
+        .where("id = :walletId", {
+          walletId: previousWinnerWallet.id,
+        })
+        .andWhere("version = :expectedPreviousWalletVersion", {
+          expectedPreviousWalletVersion,
+        })
+        .execute();
+
+      if (previousWalletUpdateResult.affected !== 1) {
+        const error = new Error(
+          "La billetera del ganador anterior fue modificada por otra operación",
+        );
+        error.statusCode = 409;
+        throw error;
+      }
+
+      previousWinnerWallet.heldBalance = newPreviousHeldBalance;
+      previousWinnerWallet.version = expectedPreviousWalletVersion + 1;
 
       const releaseEntry = ledgerRepository.create({
         wallet: previousWinnerWallet,
@@ -182,9 +206,32 @@ const createBidWithEscrow = async ({ auctionId, userId, amount }) => {
       await ledgerRepository.save(releaseEntry);
     }
 
-    wallet.heldBalance = Number(wallet.heldBalance) + amountToHold;
+    const expectedWalletVersion = wallet.version;
+    const newHeldBalance = Number(wallet.heldBalance) + amountToHold;
 
-    await walletRepository.save(wallet);
+    const walletUpdateResult = await walletRepository
+      .createQueryBuilder()
+      .update(Wallet)
+      .set({
+        heldBalance: newHeldBalance,
+        version: () => "version + 1",
+      })
+      .where("id = :walletId", {
+        walletId: wallet.id,
+      })
+      .andWhere("version = :expectedWalletVersion", {
+        expectedWalletVersion,
+      })
+      .execute();
+
+    if (walletUpdateResult.affected !== 1) {
+      const error = new Error("La billetera fue modificada por otra operación");
+      error.statusCode = 409;
+      throw error;
+    }
+
+    wallet.heldBalance = newHeldBalance;
+    wallet.version = expectedWalletVersion + 1;
 
     const newBid = bidRepository.create({
       auction: auction,
@@ -200,7 +247,8 @@ const createBidWithEscrow = async ({ auctionId, userId, amount }) => {
       .set({
         currentBid: Number(amount),
         currentWinner: wallet.user,
-        version: () => "version + 1", endDate:newEndDate
+        version: () => "version + 1",
+        endDate: newEndDate,
       })
       .where("id = :auctionId", {
         auctionId: Number(auctionId),
@@ -218,7 +266,8 @@ const createBidWithEscrow = async ({ auctionId, userId, amount }) => {
             entityType: "Auction",
             entityId: Number(auctionId),
             user: wallet.user,
-            description: "La puja fue rechazada por un conflicto de versión concurrente.",
+            description:
+              "La puja fue rechazada por un conflicto de versión concurrente.",
             metadata: {
               auctionId: Number(auctionId),
               amount: Number(amount),
@@ -227,7 +276,10 @@ const createBidWithEscrow = async ({ auctionId, userId, amount }) => {
           }),
         );
       } catch (auditError) {
-        console.error("No se pudo registrar la auditoría de concurrencia", auditError);
+        console.error(
+          "No se pudo registrar la auditoría de concurrencia",
+          auditError,
+        );
       }
 
       const error = new Error("La subasta fue modificada por otra puja");
@@ -281,7 +333,8 @@ const createBidWithEscrow = async ({ auctionId, userId, amount }) => {
           entityType: "Auction",
           entityId: auction.id,
           user: wallet.user,
-          description: "La fecha de cierre se extendió 2 minutos por Anti-Sniping.",
+          description:
+            "La fecha de cierre se extendió 2 minutos por Anti-Sniping.",
           metadata: {
             previousEndDate: auction.endDate,
             newEndDate,
