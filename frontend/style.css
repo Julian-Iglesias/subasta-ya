@@ -983,6 +983,28 @@ input:focus {
     box-shadow: 0 20px 60px rgba(23, 35, 31, 0.2);
 }
 
+.notice-modal {
+    width: min(420px, 100%);
+    max-height: none;
+}
+
+.notice-modal .modal-header {
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.notice-modal .modal-header h2 {
+    font-size: 1.35rem;
+    line-height: 1.2;
+}
+
+.notice-modal p {
+    margin: 0;
+    color: #68756e;
+    font-family: Arial, sans-serif;
+    font-size: 0.9rem;
+}
+
 .modal-header {
     display: flex;
     align-items: start;
@@ -1242,7 +1264,7 @@ input:focus {
     padding: 0;
     border: 0;
     background: transparent;
-    cursor: default;
+    cursor: pointer;
 }
 
 .intro-image {
