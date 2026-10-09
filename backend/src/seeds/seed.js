@@ -104,7 +104,7 @@ const runSeed = async () => {
     // =========================
 
     const categoryNames = [
-      "Tecnologia",
+      "Tecnología",
       "Gaming",
       "Hogar",
       "Coleccionables",
