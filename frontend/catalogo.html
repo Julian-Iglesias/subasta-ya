@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SubastaYa | Subastas</title>
     <link rel="stylesheet" href="./style.css">
+    <link rel="icon" href="./logoSubastaYa.png" type="image/png">
 </head>
 <body class="app-shell">
     <div data-app-header></div>
@@ -33,18 +34,19 @@
                     <button class="filter-chip" type="button" data-status="PAST">Pasadas</button>
                 </div>
             </div>
-            <div class="sort-row">
-                <label for="sort-select">Ordenar resultados</label>
-                <select class="sort-select" id="sort-select">
-                    <option value="time_asc">Terminan pronto</option>
-                    <option value="bid_desc">Mayor puja</option>
-                </select>
-            </div>
+            <div class="catalog-controls">
+                <div class="sort-row">
+                    <label for="sort-select">Ordenar resultados</label>
+                    <select class="sort-select" id="sort-select">
+                        <option value="time_asc">Terminan pronto</option>
+                        <option value="bid_desc">Mayor puja</option>
+                    </select>
+                </div>
 
-            <div class="price-filters">
-                <input type="number" id="min-price" placeholder="Precio mínimo" min="0" />
-            
-                <input type="number" id="max-price" placeholder="Precio máximo" min="0" />
+                <div class="price-filters">
+                    <input type="number" id="min-price" placeholder="Precio mínimo" min="0" />
+                    <input type="number" id="max-price" placeholder="Precio máximo" min="0" />
+                </div>
             </div>
         </section>
         
@@ -123,5 +125,21 @@
 
     <script src="./navigation.js"></script>
     <script src="./catalogo.js"></script>
+    <footer class="site-footer">
+        <section>
+            <h2>SubastaYa</h2>
+            <p>Plataforma de subastas en tiempo real</p>
+        </section>
+        <section>
+            <h2>Trabajo Práctico – 2026</h2>
+            <p>Iglesias Julian · Nasuti Gianfranco</p>
+        </section>
+        <section>
+            <h2>Tecnologías</h2>
+            <p>Node.js · Express · TypeORM · MySQL · Socket.io</p>
+            <a href="/api-docs">/api-docs</a>
+            <a href="https://github.com/Julian-Iglesias/subasta-ya">GitHub</a>
+        </section>
+    </footer>
 </body>
 </html>
